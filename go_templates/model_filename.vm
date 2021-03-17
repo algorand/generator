@@ -1,0 +1,6 @@
+#set( $skip = $propFile.model_skip.split(",") )
+#set( $type = $str.capitalize($def.name) )
+#set( $name = ${str.upperCamelToUnderscore($str.capitalize($def.name))} )
+#if ( ! $skip.contains($type) )
+${name}.go
+#end

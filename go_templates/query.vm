@@ -1,0 +1,224 @@
+#macro ( queryType )## TODO: If we do another major version, remove these special cases.
+#if ( ${str.capitalize($q.name)} == "SearchForAccounts" )
+SearchAccounts## The hand written client doesn't quite match the spec...
+#elseif ( ${str.capitalize($q.name)} == "GetStatus" )
+Status##
+#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactionsByAddress" )
+PendingTransactionInformationByAddress##
+#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactions" )
+PendingTransactions##
+#else
+${str.capitalize($q.name)}##
+#end
+#end
+#set( $queryType = "#queryType()" )
+## Name of function to set a parameter.
+#macro ( setParamVars $param )
+#set( $paramFunc = ${str.kebabToUpperCamel($param.propertyName)} )
+#set( $paramFunc = $paramFunc.replace("Id", "ID") )
+#if ( $queryType == "SearchAccounts" && $paramFunc == "Next" )
+#set( $paramFunc = "NextToken" )
+#elseif ( ($queryType == "SearchAccounts" || $queryType == "SearchForApplications") && $paramFunc == "ApplicationID" )## This class uses ID and Id...
+#set( $paramFunc = "ApplicationId" )
+#elseif ( $queryType == "SearchAccounts" && $paramFunc == "AuthAddr" )
+#set( $paramFunc = "AuthAddress" )
+#end
+#set( $paramArg = $paramFunc )
+#end
+## TODO: Remove the overrides someday.
+#macro ( returnType )##
+#if ( ${q.returnType} == "NodeStatusResponse" )
+models.NodeStatus##
+#elseif ( ${q.returnType} == "PendingTransactionResponse" )
+models.PendingTransactionInfo##
+#elseif ( ${q.returnType} == "String" )
+string##
+#else
+models.${q.returnType}##
+#end
+#end
+#macro ( toQueryType $param )##
+#if ( $param.algorandFormat == "RFC3339 String" )
+string##
+#elseif ( $param.type == "integer" )
+uint64##
+#elseif ( $param.type == "string" )
+string##
+#elseif ( $param.type == "boolean" )
+bool##
+#elseif( $param.type == "binary" )
+string##
+#else
+UNHANDLED TYPE
+- ref: $!param.refType
+- type: $!param.type
+- array type: $!param.arrayType
+- algorand format: $!param.algorandFormat
+- format: $!param.format
+##$unknown.type ## force a template failure with an unknown type
+#end
+#end
+## initialize hasParams based on the paramFunc macro
+#set( $hasParams = false )
+#foreach( $param in $q.queryParameters )
+#setParamVars($param)
+#if ( $paramFunc && $paramFunc != "" )
+#set( $hasParams = true )
+#break
+#end
+#end
+#set( $returnType = "#returnType()" )
+#set( $queryArg = "nil" )
+package $propFile.query_package;
+
+import (
+  "context"
+#foreach( $qp in $q.queryParameters)
+#if( $qp.algorandFormat == "base64" )
+  "encoding/base64"
+#break
+#end
+#end
+#if( $str.matches($q.path, ".*\{.*}.*") )
+  "fmt"
+#end
+#foreach( $qp in $q.queryParameters)
+#if( $qp.algorandFormat == "RFC3339 String" )
+  "time"
+#break
+#end
+#end
+
+  "github.com/algorand/go-algorand-sdk/client/v2/common"
+#if ( $returnType.contains("model") )
+  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+#end
+#if ( $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" )
+  "github.com/algorand/go-algorand-sdk/types"
+#end
+)
+## build the query Params type
+#if( $hasParams )
+#set( $paramsType = "${queryType}Params" )
+
+type ${paramsType} struct {
+#foreach( $qp in $q.queryParameters)
+#setParamVars($qp)
+#if ( $paramFunc && $paramFunc != "" )
+
+  // $str.formatDoc("$paramArg ${str.uncapitalize($qp.doc)}", "  // ")
+  $paramArg #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
+#end
+#end
+}
+#end
+
+type $queryType struct {
+  c *Client
+#foreach( $pp in $q.pathParameters )
+
+  $str.kebabToCamel($pp.propertyName) #toQueryType($pp)
+
+#end
+#if( $hasParams )
+#set( $queryArg = "s.p" )
+
+  p $paramsType
+#end
+}
+#foreach( $qp in $q.queryParameters)
+#setParamVars($qp)
+#if ( $paramFunc && ($paramFunc != "" && $paramFunc != "Format") )## No setter for Format
+#set( $paramType = "#toQueryType($qp)" )
+
+## Special handling for date fields.
+#if( $qp.algorandFormat == "RFC3339 String" )
+// $str.formatDoc("${paramFunc}String ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) ${paramFunc}String($paramArg $paramType) *$queryType {
+  s.p.$paramArg = $paramArg
+  return s
+}
+
+// $str.formatDoc("${paramFunc} ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) ${paramFunc}($paramArg time.Time) *$queryType {
+  ${paramArg}Str := ${paramArg}.Format(time.RFC3339)
+  return s.${paramFunc}String(${paramArg}Str)
+}
+#else
+// $str.formatDoc("${paramFunc} ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) ${paramFunc}($paramArg $paramType) *$queryType {
+#if ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
+  s.p.$paramArg = $paramArg
+#elseif( $param.type == "binary" )
+  s.p.$paramArg = base64.StdEncoding.EncodeToString($paramArg)
+#else
+UNHANDLED TYPE
+- ref: $!param.refType
+- type: $!param.type
+- array type: $!param.arrayType
+- algorand format: $!param.algorandFormat
+- format: $!param.format
+##$unknown.type ## force a template failure with an unknown type
+#end
+  return s
+}
+#end
+#end
+#end
+
+## Do function -- Build up path with fmt.Sprintf if there are path parameters.
+#set( $processedPath = """${q.path}""" )
+#if( $str.matches($q.path, ".*\{.*}.*") )
+#set( $processedPath = "fmt.Sprintf(""" )
+#set( $argList = "" )
+#foreach( $part in $q.pathParts )
+#if ( $part.matches("\{.*}") )
+#set( $processedPath = "${processedPath}/%v" )
+#set( $argList = "$argList, s.${str.kebabToCamel($str.unwrap($part))}" )
+#else
+#set( $processedPath = "${processedPath}/$part" )
+#end
+#end
+#set( $processedPath = "${processedPath}""$argList)" )
+#end
+## Return types are not consistent so manually add in the inconsistent functions...
+#if( $queryType == "PendingTransactionInformationByAddress" )
+func (s *PendingTransactionInformationByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+  s.p.Format = "msgpack"
+  response := models.PendingTransactionsResponse{}
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions/pending", s.address), s.p, headers)
+  total = response.TotalTransactions
+  topTransactions = response.TopTransactions
+  return
+}
+#elseif( $queryType == "PendingTransactionInformation" )
+func (s *PendingTransactionInformation) Do(ctx context.Context, headers ...*common.Header) (response models.PendingTransactionInfoResponse, stxn types.SignedTxn, err error) {
+  s.p.Format = "msgpack"
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/transactions/pending/%s", s.txid), s.p, headers)
+  stxn = response.Transaction
+  return
+}
+#elseif( $queryType == "PendingTransactions" )
+func (s *PendingTransactions) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+  s.p.Format = "msgpack"
+  response := models.PendingTransactionsResponse{}
+  err = s.c.getMsgpack(ctx, &response, "/v2/transactions/pending", s.p, headers)
+  total = response.TotalTransactions
+  topTransactions = response.TopTransactions
+  return
+}
+#elseif( $queryType == "LookupAccountByID" )
+func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
+  response := models.LookupAccountByIDResponse{}
+  err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", s.accountId), s.p, headers)
+  validRound = response.CurrentRound
+  result = response.Account
+  return
+}
+#else ## finally... machine generate the rest
+func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
+  err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
+  return
+}
+#end
+
