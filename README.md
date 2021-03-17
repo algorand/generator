@@ -78,3 +78,68 @@ In the following example we are careful to generate the algod code first, becaus
         -q indexerQueries
         -p common_config.properties,indexer_config.properties
 ```
+
+# Golang Template
+
+The go templates are in the **go_templates** directory.
+
+The go http API is only partially generated. The hand written parts were not totally consistent with the spec and that makes it difficult to regenerate them. Regardless, an attempt has been made. In the templates there are some macros which map "generated" values to the hand written ones. For example the query types have this mapping:
+```
+#macro ( queryType )
+#if ( ${str.capitalize($q.name)} == "SearchForAccounts" )
+SearchAccounts## The hand written client doesn't quite match the spec...
+#elseif ( ${str.capitalize($q.name)} == "GetStatus" )
+Status##
+#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactionsByAddress" )
+PendingTransactionInformationByAddress##
+#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactions" )
+PendingTransactions##
+#else
+${str.capitalize($q.name)}##
+#end
+#end
+```
+
+Other mappings are more specific to the language, such as the OpenAPI type to SDK type:
+```
+#macro ( toQueryType $param )##
+#if ( $param.algorandFormat == "RFC3339 String" )
+string##
+#elseif ( $param.type == "integer" )
+uint64##
+#elseif ( $param.type == "string" )
+string##
+#elseif ( $param.type == "boolean" )
+bool##
+#elseif( $param.type == "binary" )
+string##
+#else
+UNHANDLED TYPE
+- ref: $!param.refType
+- type: $!param.type
+- array type: $!param.arrayType
+- algorand format: $!param.algorandFormat
+- format: $!param.format
+##$unknown.type ## force a template failure because $unknown.type does not exist.
+#end
+#end
+```
+
+Because of this, we are phasing in code generation gradually by skipping some types. The skipped types are specified in the property files:
+**common_config.properties**
+```
+model_skip=AccountParticipation,AssetParams,RawBlockJson,etc,...
+```
+**algod_config.properties**
+```
+query_skip=Block,BlockRaw,SendRawTransaction,SuggestedParams,etc,...
+```
+**indexer_config.properties**
+```
+query_skip=LookupAssetByID,LookupAccountTransactions,SearchForAssets,LookupAssetBalances,LookupAssetTransactions,LookupBlock,LookupTransactions,SearchForTransactions
+```
+
+# Java Template
+The Java templates are in the **java_templates** directory.
+
+These are not used yet, they are the initial experiments for the template engine. Since the Java SDK has used code generation from the beginning, we should be able to fully migrate to the template engine eventually.
