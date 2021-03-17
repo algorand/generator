@@ -4,7 +4,7 @@ This is a general purpose OpenAPI code generator. It is currently used to comple
 # Usage
 We currently have two http endpoints. One for algod and one for indexer, so in most cases this tool would be run once with each OpenAPI spec.
 
-###Build as a self-executing jar:
+### Build as a self-executing jar:
 ```
 ~$ mvn package -DskipTests
 ~$ java -jar target/generator-*-jar-with-dependencies.jar -h
@@ -19,7 +19,7 @@ You'll see that there are a number of subcommands:
 
 The template subcommand is using [Apache Velocity](https://velocity.apache.org/) as the underlying template engine. Things like variables, loops, and statements are all supported. So business logic can technically be implemented in the template if it's actually necessary.
 
-###template files
+### template files
 There are three phases: **client**, **query**, and **model**. Each phase must provide two templates, one for the file generation and one to specify the filename to be used. If all results should go to the same file. For **query** and **model** generation the template will be executed once for each **query** / **model**. If you want to put everything in one file return the same filename twice in a row and the processing will exit early.
 
 | phase | filename | purpose |
@@ -31,7 +31,7 @@ There are three phases: **client**, **query**, and **model**. Each phase must pr
 | model  | model.vm           | Template to use for generating model files. |
 | model  | model_filename.vm  | File to write to the model output directory. |
 
-###output directories
+### output directories
 The template command will only run the templates which have an output directory is provided. So if you just want to regenerate models, only use the **-m** option.
 ```
   -c, --clientOutputDir
@@ -42,10 +42,10 @@ The template command will only run the templates which have an output directory 
     Directory to write query file(s).
 ```
 
-###property files
+### property files
 The template subcommand accepts a **--propertyFiles** option. It can be provided multiple times, or as a comma separated list of files. Property files will be processed and bound to a velocity variable available to templates.
 
-###template variables
+### template variables
 
 For details on a type you can put it directly into your template. It will be serialized along with its fields for your reference. Here is a high level description of what is available:
 
@@ -59,7 +59,7 @@ For details on a type you can put it directly into your template. It will be ser
 | model    | def      | `StructDef` | The current model definition if multiple files are being generated. |
 | model    | props    | `List<TypeDef>` | A list of properties for the current model. |
 
-###example usage
+### example usage
 
 In the following example we are careful to generate the algod code first, because the algod models are a strict subset of the indexer models. For that reason we are able to reuse some overlapping models from indexer in algod.
 ```
