@@ -126,14 +126,17 @@ UNHANDLED TYPE
 ```
 
 Because of this, we are phasing in code generation gradually by skipping some types. The skipped types are specified in the property files:
+
 **common_config.properties**
 ```
 model_skip=AccountParticipation,AssetParams,RawBlockJson,etc,...
 ```
+
 **algod_config.properties**
 ```
 query_skip=Block,BlockRaw,SendRawTransaction,SuggestedParams,etc,...
 ```
+
 **indexer_config.properties**
 ```
 query_skip=LookupAssetByID,LookupAccountTransactions,SearchForAssets,LookupAssetBalances,LookupAssetTransactions,LookupBlock,LookupTransactions,SearchForTransactions
