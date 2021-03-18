@@ -84,6 +84,8 @@ public class JavaGenerator implements Subscriber {
         case END_QUERY:
             javaQueryWriter.finish();
             break;
+        case END_MODEL:
+            break;
         default:
             throw new RuntimeException("Unimplemented event! " + event);
         }
