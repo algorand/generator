@@ -14,6 +14,9 @@ public class GoHelpers {
         switch(input) {
             case "SearchForAccounts":               return "SearchAccounts";
             case "GetStatus":                       return "Status";
+            case "GetBlock":                        return "Block";
+            case "GetVersion":                      return "Versions";
+            case "GetSupply":                       return "Supply";
             case "GetPendingTransactionsByAddress": return "PendingTransactionInformationByAddress";
             case "GetPendingTransactions":          return "PendingTransactions";
             default:                                return input;
@@ -28,6 +31,7 @@ public class GoHelpers {
     public String returnTypeMapper(String input) {
         if (disableMapping) return input;
         switch(input) {
+            case "SupplyResponse":              return "Supply";
             case "NodeStatusResponse":          return "NodeStatus";
             case "PendingTransactionResponse":  return "PendingTransactionInfo";
             default: return input;
@@ -43,6 +47,7 @@ public class GoHelpers {
     public String queryParamTypeNameMapper(String queryType, String input) {
         if (disableMapping) return input;
         switch (queryType) {
+            // TODO Build Fields
             case "SearchAccounts": {
                 switch(input) {
                     case "Next":            return "NextToken";
@@ -52,6 +57,7 @@ public class GoHelpers {
                 return input;
             }
             case "SearchForTransactions":
+            case "SearchForAssets":
             case "LookupAccountTransactions":
             case "LookupAssetBalances":
             case "LookupAssetTransactions": {

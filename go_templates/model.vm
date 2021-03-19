@@ -13,8 +13,10 @@ $str.kebabToUpperCamel($param.propertyName)##
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array prefix to arrays...
 #if ( $param.algorandFormat == "SignedTransaction" )
 types.SignedTxn##
-###elseif ( $param.algorandFormat == "Address" ) ## No special handling for Address in go SDK
+###elseif ( $param.algorandFormat == "Address" )## No special handling for Address in go SDK
 ##string##
+#elseif ( $param.algorandFormat == "BlockHeader" )
+types.Block##
 #elseif ( $param.type == "object" )
 *map[string]interface{}##
 #elseif ( $param.type == "integer" || $param.arrayType == "integer" )
@@ -50,9 +52,10 @@ $unknown.type ## force a template failure with an unknown type
 package $propFile.model_package;
 
 #set( $hasTypes = false )
-#foreach( $type in $def.uniqueTypes )
-#if( $type == "SignedTransaction" )
+#foreach( $param in $def.properties )
+#if( $str.matches("#toSdkType($param)", "(\[])?types\..*") )
 import "github.com/algorand/go-algorand-sdk/types"
+#break
 #set( $hasTypes = true )
 #end
 #end

@@ -178,7 +178,7 @@ public class TemplateGenerator implements Subscriber {
 
         VelocityContext context = getContext();
         String filename = getFilename(filenameTemplate, context);
-        logger.info("Writing file: {}", filename);
+        logger.info("Writing class file: {}", filename);
         Path target = Path.of(args.clientOutputDirectory.getAbsolutePath(), filename);
         try (FileWriter writer = new FileWriter(target.toFile())) {
             template.merge(context, writer);
@@ -207,7 +207,7 @@ public class TemplateGenerator implements Subscriber {
             }
             lastFilename = filename;
 
-            logger.info("Writing file: {}", filename);
+            logger.info("Writing model file: {}", filename);
             Path target = Path.of(args.modelsOutputDirectory.getAbsolutePath(), filename);
             try (FileWriter writer = new FileWriter(target.toFile())) {
                 template.merge(context, writer);
@@ -236,7 +236,7 @@ public class TemplateGenerator implements Subscriber {
             }
             lastFilename = filename;
 
-            logger.info("Writing file: {}", filename);
+            logger.info("Writing query file: {}", filename);
             Path target = Path.of(args.queryOutputDirectory.getAbsolutePath(), filename);
             try (FileWriter writer = new FileWriter(target.toFile())) {
                 template.merge(context, writer);
