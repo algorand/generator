@@ -1,14 +1,14 @@
 #set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
 ## Name of function to set a parameter.
 #macro ( setParamVars $param )
-#set( $queryParamType = ${str.kebabToUpperCamel($param.propertyName)} )
-#set( $queryParamType = $queryParamType.replace("Id", "ID") )
-#if ( $queryType == "SearchAccounts" && $queryParamType == "Next" )
-#set( $queryParamType = "NextToken" )
-#elseif ( ($queryType == "SearchAccounts" || $queryType == "SearchForApplications") && $queryParamType == "ApplicationID" )## This class uses ID and Id...
-#set( $queryParamType = "ApplicationId" )
-#elseif ( $queryType == "SearchAccounts" && $queryParamType == "AuthAddr" )
-#set( $queryParamType = "AuthAddress" )
+#set( $queryParamTypeName = ${str.kebabToUpperCamel($param.propertyName)} )
+#set( $queryParamTypeName = $queryParamTypeName.replace("Id", "ID") )
+#if ( $queryType == "SearchAccounts" && $queryParamTypeName == "Next" )
+#set( $queryParamTypeName = "NextToken" )
+#elseif ( ($queryType == "SearchAccounts" || $queryType == "SearchForApplications") && $queryParamTypeName == "ApplicationID" )## This class uses ID and Id...
+#set( $queryParamTypeName = "ApplicationId" )
+#elseif ( $queryType == "SearchAccounts" && $queryParamTypeName == "AuthAddr" )
+#set( $queryParamTypeName = "AuthAddress" )
 #end
 #end
 #macro ( returnType )##
@@ -39,11 +39,11 @@ UNHANDLED TYPE
 ##$unknown.type ## force a template failure with an unknown type
 #end
 #end
-## initialize hasParams based on the queryParamType macro
+## initialize hasParams based on the queryParamTypeName macro
 #set( $hasParams = false )
 #foreach( $param in $q.queryParameters )
 #setParamVars($param)
-#if ( $queryParamType && $queryParamType != "" )
+#if ( $queryParamTypeName && $queryParamTypeName != "" )
 #set( $hasParams = true )
 #break
 #end
@@ -85,10 +85,10 @@ import (
 type ${paramsType} struct {
 #foreach( $qp in $q.queryParameters)
 #setParamVars($qp)
-#if ( $queryParamType && $queryParamType != "" )
+#if ( $queryParamTypeName && $queryParamTypeName != "" )
 
-  // $str.formatDoc("$queryParamType ${str.uncapitalize($qp.doc)}", "  // ")
-  $queryParamType #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
+  // $str.formatDoc("$queryParamTypeName ${str.uncapitalize($qp.doc)}", "  // ")
+  $queryParamTypeName #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
 #end
 #end
 }
@@ -109,29 +109,29 @@ type $queryType struct {
 }
 #foreach( $qp in $q.queryParameters)
 #setParamVars($qp)
-#if ( $queryParamType && ($queryParamType != "" && $queryParamType != "Format") )## No setter for Format
+#if ( $queryParamTypeName && ($queryParamTypeName != "" && $queryParamTypeName != "Format") )## No setter for Format
 #set( $paramType = "#toQueryType($qp)" )
 
 ## Special handling for date fields.
 #if( $qp.algorandFormat == "RFC3339 String" )
-// $str.formatDoc("${queryParamType}String ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${queryParamType}String($queryParamType $paramType) *$queryType {
-  s.p.$queryParamType = $queryParamType
+// $str.formatDoc("${queryParamTypeName}String ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) ${queryParamTypeName}String($queryParamTypeName $paramType) *$queryType {
+  s.p.$queryParamTypeName = $queryParamTypeName
   return s
 }
 
-// $str.formatDoc("${queryParamType} ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${queryParamType}($queryParamType time.Time) *$queryType {
-  ${queryParamType}Str := ${queryParamType}.Format(time.RFC3339)
-  return s.${queryParamType}String(${queryParamType}Str)
+// $str.formatDoc("${queryParamTypeName} ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) ${queryParamTypeName}($queryParamTypeName time.Time) *$queryType {
+  ${queryParamTypeName}Str := ${queryParamTypeName}.Format(time.RFC3339)
+  return s.${queryParamTypeName}String(${queryParamTypeName}Str)
 }
 #else
-// $str.formatDoc("${queryParamType} ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${queryParamType}($queryParamType $paramType) *$queryType {
+// $str.formatDoc("${queryParamTypeName} ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) ${queryParamTypeName}($queryParamTypeName $paramType) *$queryType {
 #if ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
-  s.p.$queryParamType = $queryParamType
+  s.p.$queryParamTypeName = $queryParamTypeName
 #elseif( $param.type == "binary" )
-  s.p.$queryParamType = base64.StdEncoding.EncodeToString($queryParamType)
+  s.p.$queryParamTypeName = base64.StdEncoding.EncodeToString($queryParamTypeName)
 #else
 UNHANDLED TYPE
 - ref: $!param.refType
