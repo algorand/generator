@@ -10,7 +10,7 @@ string##
 models.$go.returnTypeMapper(${q.returnType})##
 #end
 #end
-#macro ( toQueryType $param )##
+#macro ( oapiToGo $param )##
 #if ( $param.algorandFormat == "RFC3339 String" )
 string##
 #elseif ( $param.type == "integer" )
@@ -78,7 +78,7 @@ type ${paramsType} struct {
 #if ( "#queryParamTypeName($qp)" != "" )
 
   // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "  // ")
-  #queryParamTypeName($qp) #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
+  #queryParamTypeName($qp) #oapiToGo($qp) `url:"$qp.propertyName,omitempty"`
 #end
 #end
 }
@@ -88,7 +88,7 @@ type $queryType struct {
   c *Client
 #foreach( $pp in $q.pathParameters )
 
-  $str.kebabToCamel($pp.propertyName) #toQueryType($pp)
+  $str.kebabToCamel($pp.propertyName) #oapiToGo($pp)
 
 #end
 #if( $hasParams )
@@ -99,12 +99,11 @@ type $queryType struct {
 }
 #foreach( $qp in $q.queryParameters)
 #if ( "#queryParamTypeName($qp)" != "" && "#queryParamTypeName($qp)" != "Format")## No setter for Format
-#set( $paramType = "#toQueryType($qp)" )
 
 ## Special handling for date fields.
 #if( $qp.algorandFormat == "RFC3339 String" )
 // $str.formatDoc("#queryParamTypeName($qp)String ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) #queryParamTypeName($qp)String(#queryParamTypeName($qp) $paramType) *$queryType {
+func (s *$queryType) #queryParamTypeName($qp)String(#queryParamTypeName($qp) #oapiToGo($qp)) *$queryType {
   s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
 
   return s
@@ -118,7 +117,7 @@ func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) time.Time
 }
 #else
 // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) $paramType) *$queryType {
+func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) #oapiToGo($qp)) *$queryType {
 #if ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
   s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
 #elseif( $param.type == "binary" )
