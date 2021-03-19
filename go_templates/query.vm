@@ -87,6 +87,7 @@ import (
 #if( $hasParams )
 #set( $paramsType = "${queryType}Params" )
 
+// ${paramsType} contains all of the query parameters for url serialization.
 type ${paramsType} struct {
 #foreach( $qp in $q.queryParameters)
 #if ( "#queryParamTypeName($qp)" != "" )
@@ -98,6 +99,7 @@ type ${paramsType} struct {
 }
 #end
 
+// $str.formatDoc("$queryType ${str.uncapitalize($q.description)}", "// ")
 type $queryType struct {
   c *Client
 #foreach( $p in $q.pathParameters )
@@ -157,6 +159,7 @@ UNHANDLED TYPE
 #end
 #end
 
+// Do performs the HTTP request
 ## Do function -- Build up path with fmt.Sprintf if there are path parameters.
 #set( $processedPath = """${q.path}""" )
 #if( $str.matches($q.path, ".*\{.*}.*") )
