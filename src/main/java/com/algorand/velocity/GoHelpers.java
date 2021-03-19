@@ -19,6 +19,7 @@ public class GoHelpers {
             case "GetSupply":                       return "Supply";
             case "GetPendingTransactionsByAddress": return "PendingTransactionInformationByAddress";
             case "GetPendingTransactions":          return "PendingTransactions";
+            case "RawTransaction":                  return "SendRawTransaction";
             default:                                return input;
         }
     }

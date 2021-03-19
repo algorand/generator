@@ -15,7 +15,7 @@ models.$go.returnTypeMapper(${q.returnType})##
 string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 types.Block
-#elseif( $setter && $param.algorandFormat == "base64" )
+#elseif( $setter && ($param.algorandFormat == "base64" || $param.type == "binary" || $param.format == "binary" ) )
 []byte##
 #elseif( $param.type == "binary" )
 string##
@@ -58,6 +58,9 @@ import (
 #if( $str.matches($q.path, ".*\{.*}.*") )
   "fmt"
 #end
+#if ( $queryType == "SendRawTransaction" )
+  "strings"
+#end
 #foreach( $qp in $q.queryParameters)
 #if( $qp.algorandFormat == "RFC3339 String" )
   "time"
@@ -90,9 +93,14 @@ type ${paramsType} struct {
 
 type $queryType struct {
   c *Client
-#foreach( $pp in $q.pathParameters )
+#foreach( $p in $q.pathParameters )
 
-  $str.kebabToCamel($pp.propertyName) #oapiToGo($pp, false)
+  $str.kebabToCamel($p.propertyName) #oapiToGo($p, false)
+
+#end
+#foreach( $p in $q.bodyParameters)
+
+  $str.kebabToCamel($p.propertyName) #oapiToGo($p, true)
 
 #end
 #if( $hasParams )
@@ -201,20 +209,38 @@ func (s *LookupAssetByID) Do(ctx context.Context, headers ...*common.Header) (va
 }
 #elseif( $propFile.query_package == "algod" && $queryType == "Block" )
 func (s *Block) Do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
-	var response models.BlockResponse
+  var response models.BlockResponse
 
-	s.p.Format = "msgpack"
-	err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
-	if err != nil {
-		return
-	}
+  s.p.Format = "msgpack"
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+  if err != nil {
+    return
+  }
 
-	result = response.Block
-	return
+  result = response.Block
+  return
 }
 #elseif( $propFile.query_package == "algod" && $queryType == "HealthCheck" )
 func (s *HealthCheck) Do(ctx context.Context, headers ...*common.Header) error {
   return s.c.get(ctx, nil, "/health", nil, headers)
+}
+#elseif( $queryType == "SendRawTransaction" )
+func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) (txid string, err error) {
+  var response models.PostTransactionsResponse
+  // Set default Content-Type, if the user didn't specify it.
+  addContentType := true
+  for _, header := range headers {
+    if strings.ToLower(header.Key) == "content-type" {
+      addContentType = false
+      break
+    }
+  }
+  if addContentType {
+    headers = append(headers, &common.Header{"Content-Type", "application/x-binary"})
+  }
+  err = s.c.post(ctx, &response, "/v2/transactions", s.rawtxn, headers)
+  txid = response.Txid
+  return
 }
 #else ## finally... machine generate the rest
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
