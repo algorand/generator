@@ -81,4 +81,17 @@ public class GoHelpers {
         }
         return input;
     }
+
+    public String modelParamNameMapper(String property) {
+        switch(property) {
+            case "TxType": return "Type";
+            case "Txn": return "Transaction";
+            case "Build_number": return "BuildNumber";
+            case "Commit_hash":  return "CommitHash";
+            case "Genesis_id": return "GenesisID";
+            case "Genesis_hash_b64":  return "GenesisHash";
+        }
+        return property;
+    }
+
 }
