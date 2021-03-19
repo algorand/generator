@@ -11,16 +11,11 @@
 #set( $paramFunc = "AuthAddress" )
 #end
 #end
-## TODO: Remove the overrides someday.
 #macro ( returnType )##
-#if ( ${q.returnType} == "NodeStatusResponse" )
-models.NodeStatus##
-#elseif ( ${q.returnType} == "PendingTransactionResponse" )
-models.PendingTransactionInfo##
-#elseif ( ${q.returnType} == "String" )
+#if ( ${q.returnType} == "String" )
 string##
 #else
-models.${q.returnType}##
+models.$go.returnTypeMapper(${q.returnType})##
 #end
 #end
 #macro ( toQueryType $param )##
