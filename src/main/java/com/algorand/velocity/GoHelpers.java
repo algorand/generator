@@ -1,7 +1,5 @@
 package com.algorand.velocity;
 
-import org.apache.commons.lang3.StringUtils;
-
 public class GoHelpers {
     // Set this to true to disable backwards compatibility mapping.
     private static final boolean disableMapping = false;
@@ -54,8 +52,11 @@ public class GoHelpers {
                 return input;
             }
             case "SearchForTransactions":
+            case "LookupAccountTransactions":
+            case "LookupAssetBalances":
             case "LookupAssetTransactions": {
                 switch(input) {
+                    case "Address":         return "AddressString";
                     case "ApplicationID":   return "ApplicationId";
                     case "Txid":            return "TXID";
                     case "Next":            return "NextToken";
