@@ -1,5 +1,6 @@
 package com.algorand.sdkutils.listeners;
 
+import com.algorand.velocity.GoHelpers;
 import com.algorand.velocity.StringHelpers;
 import com.algorand.sdkutils.Main;
 import com.algorand.sdkutils.generators.OpenApiParser;
@@ -142,6 +143,7 @@ public class TemplateGenerator implements Subscriber {
     private VelocityContext getContext() {
         VelocityContext context = new VelocityContext();
         context.put("str", new StringHelpers());
+        context.put("go", new GoHelpers());
         context.put("propFile", this.properties);
         context.put("models", models);
         context.put("queries", queries);

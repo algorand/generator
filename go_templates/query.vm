@@ -1,17 +1,4 @@
-#macro ( queryType )## TODO: If we do another major version, remove these special cases.
-#if ( ${str.capitalize($q.name)} == "SearchForAccounts" )
-SearchAccounts## The hand written client doesn't quite match the spec...
-#elseif ( ${str.capitalize($q.name)} == "GetStatus" )
-Status##
-#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactionsByAddress" )
-PendingTransactionInformationByAddress##
-#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactions" )
-PendingTransactions##
-#else
-${str.capitalize($q.name)}##
-#end
-#end
-#set( $queryType = "#queryType()" )
+#set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
 ## Name of function to set a parameter.
 #macro ( setParamVars $param )
 #set( $paramFunc = ${str.kebabToUpperCamel($param.propertyName)} )
