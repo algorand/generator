@@ -10,8 +10,12 @@ string##
 models.$go.returnTypeMapper(${q.returnType})##
 #end
 #end
-#macro ( oapiToGo $param )##
+#macro ( oapiToGo $param $setter )##
 #if ( $param.algorandFormat == "RFC3339 String" )
+string##
+#elseif( $setter && $param.algorandFormat == "base64" )
+[]byte##
+#elseif( $param.type == "binary" )
 string##
 #elseif ( $param.type == "integer" )
 uint64##
@@ -19,8 +23,6 @@ uint64##
 string##
 #elseif ( $param.type == "boolean" )
 bool##
-#elseif( $param.type == "binary" )
-string##
 #else
 UNHANDLED TYPE
 - ref: $!param.refType
@@ -78,7 +80,7 @@ type ${paramsType} struct {
 #if ( "#queryParamTypeName($qp)" != "" )
 
   // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "  // ")
-  #queryParamTypeName($qp) #oapiToGo($qp) `url:"$qp.propertyName,omitempty"`
+  #queryParamTypeName($qp) #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
 #end
 #end
 }
@@ -88,7 +90,7 @@ type $queryType struct {
   c *Client
 #foreach( $pp in $q.pathParameters )
 
-  $str.kebabToCamel($pp.propertyName) #oapiToGo($pp)
+  $str.kebabToCamel($pp.propertyName) #oapiToGo($pp, false)
 
 #end
 #if( $hasParams )
@@ -103,7 +105,7 @@ type $queryType struct {
 ## Special handling for date fields.
 #if( $qp.algorandFormat == "RFC3339 String" )
 // $str.formatDoc("#queryParamTypeName($qp)String ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) #queryParamTypeName($qp)String(#queryParamTypeName($qp) #oapiToGo($qp)) *$queryType {
+func (s *$queryType) #queryParamTypeName($qp)String(#queryParamTypeName($qp) #oapiToGo($qp, false)) *$queryType {
   s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
 
   return s
@@ -117,18 +119,18 @@ func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) time.Time
 }
 #else
 // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) #oapiToGo($qp)) *$queryType {
-#if ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
-  s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
-#elseif( $param.type == "binary" )
+func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) #oapiToGo($qp, true)) *$queryType {
+#if( $qp.algorandFormat == "base64" )
   s.p.#queryParamTypeName($qp) = base64.StdEncoding.EncodeToString(#queryParamTypeName($qp))
+#elseif ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
+  s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
 #else
 UNHANDLED TYPE
-- ref: $!param.refType
-- type: $!param.type
-- array type: $!param.arrayType
-- algorand format: $!param.algorandFormat
-- format: $!param.format
+- ref: $!qp.refType
+- type: $!qp.type
+- array type: $!qp.arrayType
+- algorand format: $!qp.algorandFormat
+- format: $!qp.format
 ##$unknown.type ## force a template failure with an unknown type
 #end
 

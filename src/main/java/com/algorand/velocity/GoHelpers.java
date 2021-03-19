@@ -44,17 +44,30 @@ public class GoHelpers {
      */
     public String queryParamTypeNameMapper(String queryType, String input) {
         if (disableMapping) return input;
-        if (StringUtils.equals(queryType, "SearchAccounts") && StringUtils.equals(input, "Next")) {
-            return "NextToken";
-        }
-        if (StringUtils.equals(queryType, "SearchAccounts") && StringUtils.equals(input, "ApplicationID")) {
-            return "ApplicationId";
-        }
-        if (StringUtils.equals(queryType, "SearchAccounts") && StringUtils.equals(input, "AuthAddr")) {
-            return "AuthAddress";
-        }
-        if (StringUtils.equals(queryType, "SearchForApplications") && StringUtils.equals(input, "ApplicationID")) {
-            return "ApplicationId";
+        switch (queryType) {
+            case "SearchAccounts": {
+                switch(input) {
+                    case "Next":            return "NextToken";
+                    case "ApplicationID":   return "ApplicationId";
+                    case "AuthAddr":        return "AuthAddress";
+                }
+                return input;
+            }
+            case "SearchForTransactions":
+            case "LookupAssetTransactions": {
+                switch(input) {
+                    case "ApplicationID":   return "ApplicationId";
+                    case "Txid":            return "TXID";
+                    case "Next":            return "NextToken";
+                }
+                return input;
+            }
+            case "SearchForApplications": {
+                switch(input) {
+                    case "ApplicationID":   return "ApplicationId";
+                }
+                return input;
+            }
         }
         return input;
     }
