@@ -10,7 +10,6 @@
 #elseif ( $queryType == "SearchAccounts" && $paramFunc == "AuthAddr" )
 #set( $paramFunc = "AuthAddress" )
 #end
-#set( $paramArg = $paramFunc )
 #end
 ## TODO: Remove the overrides someday.
 #macro ( returnType )##
@@ -93,8 +92,8 @@ type ${paramsType} struct {
 #setParamVars($qp)
 #if ( $paramFunc && $paramFunc != "" )
 
-  // $str.formatDoc("$paramArg ${str.uncapitalize($qp.doc)}", "  // ")
-  $paramArg #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
+  // $str.formatDoc("$paramFunc ${str.uncapitalize($qp.doc)}", "  // ")
+  $paramFunc #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
 #end
 #end
 }
@@ -121,23 +120,23 @@ type $queryType struct {
 ## Special handling for date fields.
 #if( $qp.algorandFormat == "RFC3339 String" )
 // $str.formatDoc("${paramFunc}String ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${paramFunc}String($paramArg $paramType) *$queryType {
-  s.p.$paramArg = $paramArg
+func (s *$queryType) ${paramFunc}String($paramFunc $paramType) *$queryType {
+  s.p.$paramFunc = $paramFunc
   return s
 }
 
 // $str.formatDoc("${paramFunc} ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${paramFunc}($paramArg time.Time) *$queryType {
-  ${paramArg}Str := ${paramArg}.Format(time.RFC3339)
-  return s.${paramFunc}String(${paramArg}Str)
+func (s *$queryType) ${paramFunc}($paramFunc time.Time) *$queryType {
+  ${paramFunc}Str := ${paramFunc}.Format(time.RFC3339)
+  return s.${paramFunc}String(${paramFunc}Str)
 }
 #else
 // $str.formatDoc("${paramFunc} ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${paramFunc}($paramArg $paramType) *$queryType {
+func (s *$queryType) ${paramFunc}($paramFunc $paramType) *$queryType {
 #if ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
-  s.p.$paramArg = $paramArg
+  s.p.$paramFunc = $paramFunc
 #elseif( $param.type == "binary" )
-  s.p.$paramArg = base64.StdEncoding.EncodeToString($paramArg)
+  s.p.$paramFunc = base64.StdEncoding.EncodeToString($paramFunc)
 #else
 UNHANDLED TYPE
 - ref: $!param.refType
