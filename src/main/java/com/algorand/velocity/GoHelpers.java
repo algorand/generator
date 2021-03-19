@@ -20,6 +20,8 @@ public class GoHelpers {
             case "GetPendingTransactionsByAddress": return "PendingTransactionInformationByAddress";
             case "GetPendingTransactions":          return "PendingTransactions";
             case "RawTransaction":                  return "SendRawTransaction";
+            case "WaitForBlock":                    return "StatusAfterBlock";
+            case "TransactionParams":               return "SuggestedParams";
             default:                                return input;
         }
     }
