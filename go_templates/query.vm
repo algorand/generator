@@ -203,7 +203,7 @@ func (s *PendingTransactions) Do(ctx context.Context, headers ...*common.Header)
 }
 #elseif( $queryType == "LookupAccountByID" )
 func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
-  response := models.LookupAccountByIDResponse{}
+  response := models.AccountResponse{}
   err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", s.accountId), s.p, headers)
   validRound = response.CurrentRound
   result = response.Account
@@ -211,7 +211,7 @@ func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (
 }
 #elseif( $queryType == "LookupAssetByID" )
 func (s *LookupAssetByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
-  response := models.LookupAssetByIDResponse{}
+  response := models.AssetResponse{}
   err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d", s.assetId), s.p, headers)
   validRound = response.CurrentRound
   result = response.Asset
