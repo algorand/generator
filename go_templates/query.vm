@@ -1,42 +1,5 @@
 #set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
-## Name of function to set a parameter.
-#macro ( queryParamTypeName $param )
-$go.queryParamTypeNameMapper($queryType, $str.kebabToUpperCamel($param.propertyName).replace("Id", "ID"))##
-#end
-#macro ( returnType )##
-#if ( ${q.returnType} == "String" )
-string##
-#else
-models.$go.returnTypeMapper(${q.returnType})##
-#end
-#end
-#macro ( oapiToGo $param $setter )##
-#if ( $param.algorandFormat == "RFC3339 String" )
-string##
-#elseif ( $param.algorandFormat == "BlockHeader" )
-types.Block
-#elseif( $setter && ($param.algorandFormat == "base64" || $param.type == "binary" || $param.format == "binary" ) )
-[]byte##
-#elseif( $param.type == "binary" )
-string##
-#elseif ( $param.type == "integer" )
-uint64##
-#elseif ( $param.type == "string" )
-string##
-#elseif ( $param.type == "boolean" )
-bool##
-#elseif ( $!param.refType )
-models.${param.refType}##
-#else
-UNHANDLED TYPE
-- ref: $!param.refType
-- type: $!param.type
-- array type: $!param.arrayType
-- algorand format: $!param.algorandFormat
-- format: $!param.format
-##$unknown.type ## force a template failure with an unknown type
-#end
-#end
+#parse("common_macros.vm")
 ## initialize hasParams based on the queryParamTypeName macro
 #set( $hasParams = false )
 #foreach( $param in $q.queryParameters )
@@ -45,7 +8,7 @@ UNHANDLED TYPE
 #break
 #end
 #end
-#set( $returnType = "#returnType()" )
+#set( $returnType = "#returnType($q)" )
 #set( $queryArg = "nil" )
 package $propFile.query_package;
 
@@ -283,4 +246,3 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
   return
 }
 #end
-

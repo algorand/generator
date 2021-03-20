@@ -70,6 +70,7 @@ java -jar target/generator-*-jar-with-dependencies.jar \
     -t $TEMPLATE_DIR \
     -m $SDK_DIR/client/v2/common/models \
     -q $SDK_DIR/client/v2/algod \
+    -c $SDK_DIR/client/v2/algod \
     -p $TEMPLATE_DIR/common_config.properties,$TEMPLATE_DIR/algod_config.properties
 
 # Generate indexer.
@@ -79,6 +80,7 @@ java -jar target/generator-*-jar-with-dependencies.jar \
     -t $TEMPLATE_DIR \
     -m $SDK_DIR/client/v2/common/models \
     -q $SDK_DIR/client/v2/indexer \
+    -c $SDK_DIR/client/v2/indexer \
     -p $TEMPLATE_DIR/common_config.properties,$TEMPLATE_DIR/indexer_config.properties
 
 # Run go fmt to fix the stuff I didn't get quite right in the templates.

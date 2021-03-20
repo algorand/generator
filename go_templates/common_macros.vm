@@ -1,0 +1,48 @@
+#macro ( returnType $query )##
+#if ( ${query.returnType} == "String" )
+string##
+#else
+models.$go.returnTypeMapper(${query.returnType})##
+#end
+#end
+
+#macro ( oapiToGo $param $setter )##
+#if ( $param.algorandFormat == "RFC3339 String" )
+string##
+#elseif ( $param.algorandFormat == "BlockHeader" )
+types.Block
+#elseif( $setter && ($param.algorandFormat == "base64" || $param.type == "binary" || $param.format == "binary" ) )
+[]byte##
+#elseif( $param.type == "binary" )
+string##
+#elseif ( $param.type == "integer" )
+uint64##
+#elseif ( $param.type == "string" )
+string##
+#elseif ( $param.type == "boolean" )
+bool##
+#elseif ( $!param.refType )
+models.${param.refType}##
+#else
+UNHANDLED TYPE
+- ref: $!param.refType
+- type: $!param.type
+- array type: $!param.arrayType
+- algorand format: $!param.algorandFormat
+- format: $!param.format
+##$unknown.type ## force a template failure with an unknown type
+#end
+#end
+
+## Name of function to set a parameter.
+#macro ( queryParamTypeName $param )
+$go.queryParamTypeNameMapper($queryType, $str.kebabToUpperCamel($param.propertyName).replace("Id", "ID"))##
+#end
+
+#macro ( #pathParamToArgDef $param )
+$str.kebabToCamel($param.propertyName) #oapiToGo($param, false)
+#end
+
+#macro ( #bodyParamToArgDef $param )
+$str.kebabToCamel($param.propertyName) #oapiToGo($param, false)
+#end

@@ -16,7 +16,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.app.event.implement.IncludeRelativePath;
 import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.runtime.RuntimeConstants;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -99,7 +101,7 @@ public class TemplateGenerator implements Subscriber {
     /**
      * Constructor.
      */
-    public TemplateGenerator(TemplateGeneratorArgs args, Publisher publisher) throws IOException {
+    public TemplateGenerator(TemplateGeneratorArgs args, Publisher publisher) {
         this.args =args;
 
         // Initialize property file if provided.
@@ -128,6 +130,8 @@ public class TemplateGenerator implements Subscriber {
 
         // Strict mode causes template generation fail if there is an unknown reference.
         velocityEngine.setProperty("runtime.references.strict", true);
+
+        velocityEngine.setProperty(RuntimeConstants.EVENTHANDLER_INCLUDE, IncludeRelativePath.class.getName());
 
         return velocityEngine;
     }
