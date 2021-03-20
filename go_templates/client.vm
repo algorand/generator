@@ -40,15 +40,34 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
        return
 }
 
-
-/*
+## Given a query print the arg list to the function.
+#macro( queryToClientArgs $query )
+#set( $sep = "" )
+#foreach( $p in $query.pathParameters )
+$sep#pathParamToArgDef($p)
+#set( $sep = ", " )
+#end
+#foreach( $p in $query.bodyParameters )
+$sep#bodyParamToArgDef($p)
+#set( $sep = ", " )
+#end
+#end
+## Given a query print the struct initialization.
+#macro( queryToStructInit $query )
+&${queryType}{c: c##
+#foreach( $p in $query.pathParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+#foreach( $p in $query.bodyParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+}
+#end
 #foreach( $q in $queries )
 #set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
 #if ( ! $skip.contains($queryType) )
-
-func (c *Client) $queryType() *$queryType {
-  return &${queryType}{c: c}
+func (c *Client) ${queryType}(#queryToClientArgs($q)) *$queryType {
+  return #queryToStructInit($q)
 }
 #end
 #end
-*/
