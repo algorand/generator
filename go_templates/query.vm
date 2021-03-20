@@ -37,7 +37,7 @@ import (
 #if ( $returnType.contains("model") )
   "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 #end
-#if ( $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" )
+#if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" )
   "github.com/algorand/go-algorand-sdk/types"
 #end
 #foreach( $qp in $q.bodyParameters)
@@ -139,8 +139,8 @@ UNHANDLED TYPE
 #set( $processedPath = "${processedPath}""$argList)" )
 #end
 ## Return types are not consistent so manually add in the inconsistent functions...
-#if( $queryType == "PendingTransactionInformationByAddress" )
-func (s *PendingTransactionInformationByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+#if( $queryType == "PendingTransactionsByAddress" )
+func (s *PendingTransactionsByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
   s.p.Format = "msgpack"
   response := models.PendingTransactionsResponse{}
   err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions/pending", s.address), s.p, headers)

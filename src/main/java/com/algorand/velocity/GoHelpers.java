@@ -17,7 +17,7 @@ public class GoHelpers {
             case "GetBlock":                        return "Block";
             case "GetVersion":                      return "Versions";
             case "GetSupply":                       return "Supply";
-            case "GetPendingTransactionsByAddress": return "PendingTransactionInformationByAddress";
+            case "GetPendingTransactionsByAddress": return "PendingTransactionsByAddress";
             case "GetPendingTransactions":          return "PendingTransactions";
             case "RawTransaction":                  return "SendRawTransaction";
             case "WaitForBlock":                    return "StatusAfterBlock";
