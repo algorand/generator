@@ -65,15 +65,15 @@ type ${paramsType} struct {
 // $str.formatDoc("$queryType ${str.uncapitalize($q.description)}", "// ")
 type $queryType struct {
   c *Client
-#foreach( $p in $q.pathParameters )
 
-  $str.kebabToCamel($p.propertyName) #oapiToGo($p, false)
+
+#foreach( $p in $q.pathParameters )
+  #pathParamToArgDef($p)
 
 #end
 #foreach( $p in $q.bodyParameters)
-
-  $str.kebabToCamel($p.propertyName) #oapiToGo($p, true)
-
+  #bodyParamToArgDef($p)
+ 
 #end
 #if( $hasParams )
 #set( $queryArg = "s.p" )

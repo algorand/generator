@@ -39,10 +39,10 @@ UNHANDLED TYPE
 $go.queryParamTypeNameMapper($queryType, $str.kebabToUpperCamel($param.propertyName).replace("Id", "ID"))##
 #end
 
-#macro ( #pathParamToArgDef $param )
+#macro ( pathParamToArgDef $param )
 $str.kebabToCamel($param.propertyName) #oapiToGo($param, false)
 #end
 
-#macro ( #bodyParamToArgDef $param )
-$str.kebabToCamel($param.propertyName) #oapiToGo($param, false)
+#macro ( bodyParamToArgDef $param )
+$str.kebabToCamel($param.propertyName) #oapiToGo($param, true)
 #end
