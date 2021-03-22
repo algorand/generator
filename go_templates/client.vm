@@ -5,6 +5,12 @@ import (
   "context"
 
   "github.com/algorand/go-algorand-sdk/client/v2/common"
+#foreach( $q in $queries )
+## TODO: Something like: $str.matches("#oapiToGo($qp)", "model\..*")
+#if ( "$go.queryTypeMapper(${str.capitalize($q.name)})" == "TealDryrun" )
+  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+#end
+#end
 )
 
 const authHeader = "$propFile.auth_header"
@@ -66,6 +72,7 @@ $sep#bodyParamToArgDef($p)
 #foreach( $q in $queries )
 #set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
 #if ( ! $skip.contains($queryType) )
+
 func (c *Client) ${queryType}(#queryToClientArgs($q)) *$queryType {
   return #queryToStructInit($q)
 }

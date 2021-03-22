@@ -22,6 +22,7 @@ public class GoHelpers {
             case "RawTransaction":                  return "SendRawTransaction";
             case "WaitForBlock":                    return "StatusAfterBlock";
             case "TransactionParams":               return "SuggestedParams";
+            case "MakeHealthCheck":                 return "HealthCheck";
             default:                                return input;
         }
     }
@@ -37,6 +38,7 @@ public class GoHelpers {
             case "SupplyResponse":              return "Supply";
             case "NodeStatusResponse":          return "NodeStatus";
             case "PendingTransactionResponse":  return "PendingTransactionInfo";
+            case "HealthCheck":                 return "HealthCheckResponse";
             default: return input;
         }
     }
