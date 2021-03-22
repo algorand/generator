@@ -78,3 +78,10 @@ func (c *Client) ${queryType}(#queryToClientArgs($q)) *$queryType {
 }
 #end
 #end
+## We added this convenience method outside of the spec for fetching the raw block.
+#if( $propFile.query_package == "algod" )
+
+func (c *Client) BlockRaw(round uint64) *BlockRaw {
+	return &BlockRaw{c: c, round: round}
+}
+#end
