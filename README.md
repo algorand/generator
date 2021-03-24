@@ -79,6 +79,23 @@ In the following example we are careful to generate the algod code first, becaus
         -p common_config.properties,indexer_config.properties
 ```
 
+# Test Template
+
+There is a test template that gives you some basic usage in the **test_templates** directory.
+
+You can generate the test code in the **output** directory with the following commands:
+```
+~$ mkdir output
+~$ java -jar target/generator-*-jar-with-dependencies.jar \
+    template \
+    -s /path/to/a/spec/file/indexer.oas2.json \
+    -t test_templates/ \
+    -m output \
+    -q output \
+    -c output \
+    -p test_templates/my.properties
+```
+
 # Golang Template
 
 The go templates are in the **go_templates** directory.

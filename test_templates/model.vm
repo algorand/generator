@@ -1,0 +1,11 @@
+Model template
+
+The current model is $def.name
+
+$def
+
+Properties
+#foreach( $p in $props )
+
+$p
+#end
