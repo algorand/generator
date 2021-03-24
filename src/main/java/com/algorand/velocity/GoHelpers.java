@@ -84,8 +84,9 @@ public class GoHelpers {
         return input;
     }
 
-    public String modelParamNameMapper(String property) {
-        switch(property) {
+    public String modelParamNameMapper(String input) {
+        if (disableMapping) return input;
+        switch(input) {
             case "TxType": return "Type";
             case "Txn": return "Transaction";
             case "Build_number": return "BuildNumber";
@@ -93,7 +94,7 @@ public class GoHelpers {
             case "Genesis_id": return "GenesisID";
             case "Genesis_hash_b64":  return "GenesisHash";
         }
-        return property;
+        return input;
     }
 
 }
