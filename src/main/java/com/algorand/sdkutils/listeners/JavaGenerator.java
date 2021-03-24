@@ -221,7 +221,7 @@ public class JavaGenerator implements Subscriber {
         }
 
         sb.append("\n    /**\n");
-        sb.append("     * Construct an " + clientName + " for communicating with the REST API.\n");
+        sb.append("     * Construct an " + clientName + " with custom token key for communicating with the REST API.\n");
         sb.append("     * @param host using a URI format. If the scheme is not supplied the client will use HTTP.\n");
         sb.append("     * @param port REST server port.\n");
         sb.append("     * @param token authentication token.\n");
