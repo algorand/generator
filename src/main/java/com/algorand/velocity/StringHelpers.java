@@ -36,6 +36,13 @@ public class StringHelpers {
     public String upperCamelToUnderscore(String kebab) {
         return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, kebab);
     }
+    
+    /**
+     * Convert from underscore case to "lowerCamelCase"
+     */
+    public String underscoreToCamel(String underscore) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, underscore);
+    }
 
     /**
      * Removes the first and last character, i.e. if it's wrapped in "{string}" then "string" is returned.
