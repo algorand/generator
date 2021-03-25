@@ -1,73 +1,14 @@
-#macro ( queryType )## TODO: If we do another major version, remove these special cases.
-#if ( ${str.capitalize($q.name)} == "SearchForAccounts" )
-SearchAccounts## The hand written client doesn't quite match the spec...
-#elseif ( ${str.capitalize($q.name)} == "GetStatus" )
-Status##
-#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactionsByAddress" )
-PendingTransactionInformationByAddress##
-#elseif ( ${str.capitalize($q.name)} == "GetPendingTransactions" )
-PendingTransactions##
-#else
-${str.capitalize($q.name)}##
-#end
-#end
-#set( $queryType = "#queryType()" )
-## Name of function to set a parameter.
-#macro ( setParamVars $param )
-#set( $paramFunc = ${str.kebabToUpperCamel($param.propertyName)} )
-#set( $paramFunc = $paramFunc.replace("Id", "ID") )
-#if ( $queryType == "SearchAccounts" && $paramFunc == "Next" )
-#set( $paramFunc = "NextToken" )
-#elseif ( ($queryType == "SearchAccounts" || $queryType == "SearchForApplications") && $paramFunc == "ApplicationID" )## This class uses ID and Id...
-#set( $paramFunc = "ApplicationId" )
-#elseif ( $queryType == "SearchAccounts" && $paramFunc == "AuthAddr" )
-#set( $paramFunc = "AuthAddress" )
-#end
-#set( $paramArg = $paramFunc )
-#end
-## TODO: Remove the overrides someday.
-#macro ( returnType )##
-#if ( ${q.returnType} == "NodeStatusResponse" )
-models.NodeStatus##
-#elseif ( ${q.returnType} == "PendingTransactionResponse" )
-models.PendingTransactionInfo##
-#elseif ( ${q.returnType} == "String" )
-string##
-#else
-models.${q.returnType}##
-#end
-#end
-#macro ( toQueryType $param )##
-#if ( $param.algorandFormat == "RFC3339 String" )
-string##
-#elseif ( $param.type == "integer" )
-uint64##
-#elseif ( $param.type == "string" )
-string##
-#elseif ( $param.type == "boolean" )
-bool##
-#elseif( $param.type == "binary" )
-string##
-#else
-UNHANDLED TYPE
-- ref: $!param.refType
-- type: $!param.type
-- array type: $!param.arrayType
-- algorand format: $!param.algorandFormat
-- format: $!param.format
-##$unknown.type ## force a template failure with an unknown type
-#end
-#end
-## initialize hasParams based on the paramFunc macro
+#set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
+#parse("common_macros.vm")
+## initialize hasParams based on the queryParamTypeName macro
 #set( $hasParams = false )
 #foreach( $param in $q.queryParameters )
-#setParamVars($param)
-#if ( $paramFunc && $paramFunc != "" )
+#if ( "#queryParamTypeName($param)" != "" )
 #set( $hasParams = true )
 #break
 #end
 #end
-#set( $returnType = "#returnType()" )
+#set( $returnType = "#returnType($q)" )
 #set( $queryArg = "nil" )
 package $propFile.query_package;
 
@@ -82,6 +23,9 @@ import (
 #if( $str.matches($q.path, ".*\{.*}.*") )
   "fmt"
 #end
+#if ( $queryType == "SendRawTransaction" )
+  "strings"
+#end
 #foreach( $qp in $q.queryParameters)
 #if( $qp.algorandFormat == "RFC3339 String" )
   "time"
@@ -93,32 +37,43 @@ import (
 #if ( $returnType.contains("model") )
   "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 #end
-#if ( $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" )
+#if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" )
   "github.com/algorand/go-algorand-sdk/types"
+#end
+#foreach( $qp in $q.bodyParameters)
+#if( $str.matches("#oapiToGo($qp)", "models\..*") )
+  "github.com/algorand/go-algorand-sdk/encoding/msgpack"
+#end
 #end
 )
 ## build the query Params type
 #if( $hasParams )
 #set( $paramsType = "${queryType}Params" )
 
+// ${paramsType} contains all of the query parameters for url serialization.
 type ${paramsType} struct {
 #foreach( $qp in $q.queryParameters)
-#setParamVars($qp)
-#if ( $paramFunc && $paramFunc != "" )
+#if ( "#queryParamTypeName($qp)" != "" )
 
-  // $str.formatDoc("$paramArg ${str.uncapitalize($qp.doc)}", "  // ")
-  $paramArg #toQueryType($qp) `url:"$qp.propertyName,omitempty"`
+  // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "  // ")
+  #queryParamTypeName($qp) #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
 #end
 #end
 }
 #end
 
+// $str.formatDoc("$queryType ${str.uncapitalize($q.description)}", "// ")
 type $queryType struct {
   c *Client
-#foreach( $pp in $q.pathParameters )
 
-  $str.kebabToCamel($pp.propertyName) #toQueryType($pp)
 
+#foreach( $p in $q.pathParameters )
+  #pathParamToArgDef($p)
+
+#end
+#foreach( $p in $q.bodyParameters)
+  #bodyParamToArgDef($p)
+ 
 #end
 #if( $hasParams )
 #set( $queryArg = "s.p" )
@@ -127,45 +82,47 @@ type $queryType struct {
 #end
 }
 #foreach( $qp in $q.queryParameters)
-#setParamVars($qp)
-#if ( $paramFunc && ($paramFunc != "" && $paramFunc != "Format") )## No setter for Format
-#set( $paramType = "#toQueryType($qp)" )
+#if ( "#queryParamTypeName($qp)" != "" && "#queryParamTypeName($qp)" != "Format")## No setter for Format
 
 ## Special handling for date fields.
 #if( $qp.algorandFormat == "RFC3339 String" )
-// $str.formatDoc("${paramFunc}String ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${paramFunc}String($paramArg $paramType) *$queryType {
-  s.p.$paramArg = $paramArg
+// $str.formatDoc("#queryParamTypeName($qp)String ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) #queryParamTypeName($qp)String(#queryParamTypeName($qp) #oapiToGo($qp, false)) *$queryType {
+  s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
+
   return s
 }
 
-// $str.formatDoc("${paramFunc} ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${paramFunc}($paramArg time.Time) *$queryType {
-  ${paramArg}Str := ${paramArg}.Format(time.RFC3339)
-  return s.${paramFunc}String(${paramArg}Str)
+// $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) time.Time) *$queryType {
+  #queryParamTypeName($qp)Str := #queryParamTypeName($qp).Format(time.RFC3339)
+
+  return s.#queryParamTypeName($qp)String(#queryParamTypeName($qp)Str)
 }
 #else
-// $str.formatDoc("${paramFunc} ${str.uncapitalize($qp.doc)}", "// ")
-func (s *$queryType) ${paramFunc}($paramArg $paramType) *$queryType {
-#if ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
-  s.p.$paramArg = $paramArg
-#elseif( $param.type == "binary" )
-  s.p.$paramArg = base64.StdEncoding.EncodeToString($paramArg)
+// $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "// ")
+func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) #oapiToGo($qp, true)) *$queryType {
+#if( $qp.algorandFormat == "base64" )
+  s.p.#queryParamTypeName($qp) = base64.StdEncoding.EncodeToString(#queryParamTypeName($qp))
+#elseif ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
+  s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
 #else
 UNHANDLED TYPE
-- ref: $!param.refType
-- type: $!param.type
-- array type: $!param.arrayType
-- algorand format: $!param.algorandFormat
-- format: $!param.format
+- ref: $!qp.refType
+- type: $!qp.type
+- array type: $!qp.arrayType
+- algorand format: $!qp.algorandFormat
+- format: $!qp.format
 ##$unknown.type ## force a template failure with an unknown type
 #end
+
   return s
 }
 #end
 #end
 #end
 
+// Do performs the HTTP request
 ## Do function -- Build up path with fmt.Sprintf if there are path parameters.
 #set( $processedPath = """${q.path}""" )
 #if( $str.matches($q.path, ".*\{.*}.*") )
@@ -182,8 +139,8 @@ UNHANDLED TYPE
 #set( $processedPath = "${processedPath}""$argList)" )
 #end
 ## Return types are not consistent so manually add in the inconsistent functions...
-#if( $queryType == "PendingTransactionInformationByAddress" )
-func (s *PendingTransactionInformationByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
+#if( $queryType == "PendingTransactionsByAddress" )
+func (s *PendingTransactionsByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
   s.p.Format = "msgpack"
   response := models.PendingTransactionsResponse{}
   err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions/pending", s.address), s.p, headers)
@@ -209,16 +166,83 @@ func (s *PendingTransactions) Do(ctx context.Context, headers ...*common.Header)
 }
 #elseif( $queryType == "LookupAccountByID" )
 func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
-  response := models.LookupAccountByIDResponse{}
+  response := models.AccountResponse{}
   err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", s.accountId), s.p, headers)
   validRound = response.CurrentRound
   result = response.Account
   return
 }
-#else ## finally... machine generate the rest
+#elseif( $queryType == "LookupAssetByID" )
+func (s *LookupAssetByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
+  response := models.AssetResponse{}
+  err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d", s.assetId), s.p, headers)
+  validRound = response.CurrentRound
+  result = response.Asset
+  return
+}
+#elseif( $propFile.query_package == "algod" && $queryType == "Block" )
+func (s *Block) Do(ctx context.Context, headers ...*common.Header) (result types.Block, err error) {
+  var response models.BlockResponse
+
+  s.p.Format = "msgpack"
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+  if err != nil {
+    return
+  }
+
+  result = response.Block
+  return
+}
+#elseif( $propFile.query_package == "algod" && $queryType == "HealthCheck" )
+func (s *HealthCheck) Do(ctx context.Context, headers ...*common.Header) error {
+  return s.c.get(ctx, nil, "/health", nil, headers)
+}
+#elseif( $queryType == "SendRawTransaction" )
+func (s *SendRawTransaction) Do(ctx context.Context, headers ...*common.Header) (txid string, err error) {
+  var response models.PostTransactionsResponse
+  // Set default Content-Type, if the user didn't specify it.
+  addContentType := true
+  for _, header := range headers {
+    if strings.ToLower(header.Key) == "content-type" {
+      addContentType = false
+      break
+    }
+  }
+  if addContentType {
+    headers = append(headers, &common.Header{"Content-Type", "application/x-binary"})
+  }
+  err = s.c.post(ctx, &response, "/v2/transactions", s.rawtxn, headers)
+  txid = response.Txid
+  return
+}
+#elseif( $queryType == "SuggestedParams" )
+func (s *SuggestedParams) Do(ctx context.Context, headers ...*common.Header) (params types.SuggestedParams, err error) {
+  var response models.TransactionParametersResponse
+  err = s.c.get(ctx, &response, "/v2/transactions/params", nil, headers)
+  params = types.SuggestedParams{
+    Fee:              types.MicroAlgos(response.Fee),
+    GenesisID:        response.GenesisId,
+    GenesisHash:      response.GenesisHash,
+    FirstRoundValid:  types.Round(response.LastRound),
+    LastRoundValid:   types.Round(response.LastRound + 1000),
+    ConsensusVersion: response.ConsensusVersion,
+    MinFee:           response.MinFee,
+  }
+  return
+}
+#elseif( $queryType == "TealCompile" )## TODO: "post" can be generated, there is nothing special here.
+func (s *TealCompile) Do(ctx context.Context, headers ...*common.Header) (response models.CompileResponse, err error) {
+  err = s.c.post(ctx, &response, "/v2/teal/compile", s.source, headers)
+  return
+}
+#elseif( $queryType == "TealDryrun" )## TODO: "post" can be generated, there is nothing special here.
+func (s *TealDryrun) Do(ctx context.Context, headers ...*common.Header) (response models.DryrunResponse, err error) {
+  err = s.c.post(ctx, &response, "/v2/teal/dryrun", msgpack.Encode(&s.request), headers)
+  return
+}
+#else## finally... machine generate the rest
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
   err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
   return
 }
 #end
-

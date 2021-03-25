@@ -1,0 +1,87 @@
+#set( $skip = $propFile.query_skip.split(",") )
+package $propFile.query_package
+
+import (
+  "context"
+
+  "github.com/algorand/go-algorand-sdk/client/v2/common"
+#foreach( $q in $queries )
+## TODO: Something like: $str.matches("#oapiToGo($qp)", "model\..*")
+#if ( "$go.queryTypeMapper(${str.capitalize($q.name)})" == "TealDryrun" )
+  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+#end
+#end
+)
+
+const authHeader = "$propFile.auth_header"
+
+type Client common.Client
+
+// get performs a GET request to the specific path against the server, assumes JSON response
+func (c *Client) get(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+       return (*common.Client)(c).Get(ctx, response, path, body, headers)
+}
+
+// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
+func (c *Client) getMsgpack(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+       return (*common.Client)(c).GetRawMsgpack(ctx, response, path, body, headers)
+}
+
+// getMsgpack performs a GET request to the specific path against the server, assumes msgpack response
+func (c *Client) getRaw(ctx context.Context, path string, body interface{}, headers []*common.Header) ([]byte, error) {
+       return (*common.Client)(c).GetRaw(ctx, path, body, headers)
+}
+
+// post sends a POST request to the given path with the given request object.
+// No query parameters will be sent if request is nil.
+// response must be a pointer to an object as post writes the response there.
+func (c *Client) post(ctx context.Context, response interface{}, path string, body interface{}, headers []*common.Header) error {
+       return (*common.Client)(c).Post(ctx, response, path, body, headers)
+}
+
+// MakeClient is the factory for constructing a ClientV2 for a given endpoint.
+func MakeClient(address string, apiToken string) (c *Client, err error) {
+       commonClient, err := common.MakeClient(address, authHeader, apiToken)
+       c = (*Client)(commonClient)
+       return
+}
+
+## Given a query print the arg list to the function.
+#macro( queryToClientArgs $query )
+#set( $sep = "" )
+#foreach( $p in $query.pathParameters )
+$sep#pathParamToArgDef($p)
+#set( $sep = ", " )
+#end
+#foreach( $p in $query.bodyParameters )
+$sep#bodyParamToArgDef($p)
+#set( $sep = ", " )
+#end
+#end
+## Given a query print the struct initialization.
+#macro( queryToStructInit $query )
+&${queryType}{c: c##
+#foreach( $p in $query.pathParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+#foreach( $p in $query.bodyParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+}
+#end
+#foreach( $q in $queries )
+#set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
+#if ( ! $skip.contains($queryType) )
+
+func (c *Client) ${queryType}(#queryToClientArgs($q)) *$queryType {
+  return #queryToStructInit($q)
+}
+#end
+#end
+## We added this convenience method outside of the spec for fetching the raw block.
+#if( $propFile.query_package == "algod" )
+
+func (c *Client) BlockRaw(round uint64) *BlockRaw {
+	return &BlockRaw{c: c, round: round}
+}
+#end

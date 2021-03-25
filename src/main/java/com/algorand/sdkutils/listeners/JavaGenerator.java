@@ -84,6 +84,8 @@ public class JavaGenerator implements Subscriber {
         case END_QUERY:
             javaQueryWriter.finish();
             break;
+        case END_MODEL:
+            break;
         default:
             throw new RuntimeException("Unimplemented event! " + event);
         }
@@ -215,8 +217,19 @@ public class JavaGenerator implements Subscriber {
             sb.append("     */\n");
             sb.append("    public " + clientName + "(String host, int port) {\n" +
                     "        super(host, port, \"\", \"" + tokenName + "\");\n" +
-                    "    }\n\n");
+                    "    }\n");
         }
+
+        sb.append("\n    /**\n");
+        sb.append("     * Construct an " + clientName + " with custom token key for communicating with the REST API.\n");
+        sb.append("     * @param host using a URI format. If the scheme is not supplied the client will use HTTP.\n");
+        sb.append("     * @param port REST server port.\n");
+        sb.append("     * @param token authentication token.\n");
+        sb.append("     * @param tokenKey authentication token key.\n");
+        sb.append("     */\n");
+        sb.append("    public " + clientName + "(String host, int port, String token, String tokenKey) {\n" +
+                "        super(host, port, token, tokenKey);\n" +
+                "    }\n\n");
 
         sb.append(paths);
         sb.append("}\n");

@@ -54,8 +54,8 @@ class OpenApiParserTest {
                 .extracting("name")
                 .containsAll(expectedStructs);
 
-        // 'onEvent(evt)' - called 14 times, once for each END_QUERY.
-        verify(subscriber, times(14))
+        // 'onEvent(evt)' - called 20 times, once for each END_QUERY/END_MODEL.
+        verify(subscriber, times(20))
                 .onEvent(any());
 
         // 'onEvent(evt, []String)` - called 14 times, once for each NEW_QUERY.

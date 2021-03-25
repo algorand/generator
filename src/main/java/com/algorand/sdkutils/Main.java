@@ -30,32 +30,43 @@ public class Main {
                 .build();
         root.parse(argv);
 
-        // Root level help generated from parameter annotations.
-        if (common.help) {
-            common.validate(root);
-            return;
-        }
-
         if (common.verbose) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
         // Route to command handler.
         String commandName = root.getParsedCommand();
-        JCommander command = root.getCommands().get(commandName);
+        if (commandName == null) commandName = "";
         switch(commandName) {
-            case "template":
+            case "template": {
+                JCommander command = root.getCommands().get(commandName);
                 template.validate(command);
                 TemplateGenerator.main(template, command);
                 return;
-            case "java":
+            }
+            case "java": {
+                JCommander command = root.getCommands().get(commandName);
                 java.validate(command);
                 javaGenerator(java, command);
                 return;
-            case "responses":
+            }
+            case "responses": {
+                JCommander command = root.getCommands().get(commandName);
                 responses.validate(command);
                 ResponseGenerator.main(responses, command);
                 return;
+            }
+            default: {
+                if (!common.help) {
+                    root.parse("-h");
+                }
+
+                // help generated from parameter annotations.
+                if (common.help) {
+                    common.validate(root);
+                    return;
+                }
+            }
         }
     }
 

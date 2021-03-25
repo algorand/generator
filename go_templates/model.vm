@@ -1,20 +1,16 @@
 ## conversion function to map generated name from spec to hand written name
 #macro ( paramName $param )##
-#if( $param.propertyName == "tx-type" )
-Type##
-#elseif( $param.propertyName == "txn" )
-Transaction##
-#else
 $str.kebabToUpperCamel($param.propertyName)##
-#end
 #end
 ## Converts a parameter type into the SDK specific type.
 #macro ( toSdkType $param )##
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array prefix to arrays...
 #if ( $param.algorandFormat == "SignedTransaction" )
 types.SignedTxn##
-###elseif ( $param.algorandFormat == "Address" ) ## No special handling for Address in go SDK
+###elseif ( $param.algorandFormat == "Address" )## No special handling for Address in go SDK
 ##string##
+#elseif ( $param.algorandFormat == "BlockHeader" )
+types.Block##
 #elseif ( $param.type == "object" )
 *map[string]interface{}##
 #elseif ( $param.type == "integer" || $param.arrayType == "integer" )
@@ -50,9 +46,10 @@ $unknown.type ## force a template failure with an unknown type
 package $propFile.model_package;
 
 #set( $hasTypes = false )
-#foreach( $type in $def.uniqueTypes )
-#if( $type == "SignedTransaction" )
+#foreach( $param in $def.properties )
+#if( $str.matches("#toSdkType($param)", "(\[])?types\..*") )
 import "github.com/algorand/go-algorand-sdk/types"
+#break
 #set( $hasTypes = true )
 #end
 #end
@@ -66,7 +63,7 @@ import "github.com/algorand/go-algorand-sdk/types"
 #end
 type $def.name struct {
 #foreach( $param in $def.properties )
-#set( $formattedName = "#paramName()" )
+#set( $formattedName = $go.modelParamNameMapper( "#paramName($param)" ) )
   // $str.formatDoc("$formattedName ${str.uncapitalize($param.doc)}", "  // ")
   $formattedName #toSdkType($param) `json:"$param.propertyName#if( !$param.required ),omitempty#end"`
 #if( $foreach.hasNext )$new#end

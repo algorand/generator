@@ -1,0 +1,6 @@
+this is the client template
+
+#foreach( $q in $queries )
+
+$q
+#end
