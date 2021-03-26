@@ -41,6 +41,13 @@ $unknown.type ## force a template failure with an unknown type
 #end
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array suffix to arrays...
 #end
+#macro ( questionMarkIfOptional $param )
+#if ($param.required)
+##
+#else
+?##
+#end
+#end
 #set( $new = "
 " )
 #set( $object_gt = $propFile.use_object_params_if_greater_than )
@@ -66,7 +73,7 @@ import BlockHeader from '../../../../types/blockHeader';
 export class $def.name extends BaseModel {
 #if ($use_object_params)
 #foreach( $prop in $props )
-  public #paramName($prop): #toSdkType($prop);
+  public #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop);
 #end
 
 #end
@@ -85,10 +92,15 @@ export class $def.name extends BaseModel {
 #if ($use_object_params)
     #paramName($prop),
 #else
-    public #paramName($prop): #toSdkType($prop),
+    public #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop),
 #end
 #end
 #if ($use_object_params)
+  }: {
+#foreach ( $prop in $props )
+    #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop)
+
+#end
   }) {
 #else
   ) {
