@@ -52,6 +52,7 @@ For details on a type you can put it directly into your template. It will be ser
 | template | variable | type | purpose |
 | -------- | -------- | ---- |------- |
 | all      | str      | `StringHelpers.java` | Some string utilities are available. See `StringHelpers.java` for details. There are simple things like `$str.capitalize("someData")` -> `SomeData`, and also some more complex helpers like `$str.formatDoc($query.doc, "// ")` which will split the document at the word boundary nearest to 80 characters without going over, and add a prefix to each new line. |
+| all      | order    | `OrderHelpers.java`  | Some ordering utilities available. See `OrderHelpers.java` for details. An example utility function is `$order.propertiesWithOrdering($props, $preferred_order)`, where `$props` is a list of properties and `$preferred_order` is a string list to use when ordering the properties list. |
 | all      | propFile | `Properties` | The contents of all property files are available with this variable. For example if `package=com.algorand.v2.algod` is in the property file, the template may use `${propFile.package}`.
 | all      | models   | `HashMap<StructDef, List<TypeDef>>` | A list of all models. |
 | all      | queries  | `List<QueryDef>` | A list of all queries. |
