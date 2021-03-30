@@ -121,6 +121,7 @@ public class OpenApiParser {
             // Need to check here if this type does not have a class of its own
             // No C/C++ style typedef in java, and this type could be a class with no properties
             prop = getFromRef(refNode.asText());
+            required = requiredInStruct || isRequired(prop);
             if (desc.isEmpty()) {
                 desc = prop.get("description") == null ? "" : prop.get("description").asText();
             }
