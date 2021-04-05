@@ -4,6 +4,9 @@
 # maven
 target/
 
+# Cloned repositories for automatic generation
+clones
+
 # Compiled class file
 *.class
 
