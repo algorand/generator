@@ -251,6 +251,17 @@ public class OpenApiParser {
         imports.get(key).add(imp);
     }
 
+    // Returns an iterator in sorted order of the models (json nodes).
+    static Map<String, JsonNode> getSortedSchema(JsonNode schemas) {
+        Iterator<Entry<String, JsonNode>> classes = schemas.fields();
+        TreeMap<String, JsonNode> classMap = new TreeMap<String, JsonNode>();
+        while (classes.hasNext()) {
+            Entry<String, JsonNode> e = classes.next();
+            classMap.put(e.getKey(), e.getValue());
+        }
+        return classMap;
+    }
+
     // Returns an iterator in sorted order of the properties (json nodes).
     static Map<String, JsonNode> getSortedProperties(JsonNode properties) {
         Iterator<Entry<String, JsonNode>> props = properties.fields();
@@ -481,9 +492,7 @@ public class OpenApiParser {
     public void generateAlgodIndexerObjects (JsonNode root) throws IOException {
         JsonNode schemas = root.get("components") !=
                 null ? root.get("components").get("schemas") : root.get("definitions");
-                Iterator<Entry<String, JsonNode>> classes = schemas.fields();
-                while (classes.hasNext()) {
-                    Entry<String, JsonNode> cls = classes.next();
+                for (Map.Entry<String, JsonNode> cls : getSortedSchema(schemas).entrySet()) {
                     String desc = null;
                     if (!hasProperties(cls.getValue())) {
                         // If it has no properties, no class is needed for this type.
