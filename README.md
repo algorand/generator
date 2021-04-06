@@ -181,6 +181,13 @@ For example, the following commands would generate and open PRs against the deve
 
 ```bash
 $ ./automation/setup.sh
-$ ./automation/generate.sh --repo "https://github.com/algorand/js-algorand-sdk" -b "develop"
-$ ./automation/generate.sh --repo "https://github.com/algorand/go-algorand-sdk" -b "develop"
+$ ./automation/generate.sh --repo "https://github.com/algorand/js-algorand-sdk" --branch "develop"
+$ ./automation/generate.sh --repo "https://github.com/algorand/go-algorand-sdk" --branch "develop"
+```
+
+Or more concisely using the comma-separated `GH_REPOS` environment variable:
+
+```bash
+$ export GH_REPOS="https://github.com/algorand/js-algorand-sdk.git#develop,https://github.com/algorand/go-algorand-sdk"
+$ ./automation/run.sh
 ```
