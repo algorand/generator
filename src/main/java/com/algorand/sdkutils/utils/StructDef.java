@@ -3,6 +3,7 @@ package com.algorand.sdkutils.utils;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Set;
 
 public class StructDef {
@@ -74,5 +75,21 @@ public class StructDef {
 
     public Set<String> getMutuallyExclusiveProperties() {
         return mutuallyExclusiveProperties;
+    }
+
+    public List<TypeDef> getPropertiesSortedByRequired() {
+        return this.sortPropertiesByRequired(this.properties);
+    }
+
+    // Sort properties such that required properties appear first
+    public List<TypeDef> sortPropertiesByRequired(List<TypeDef> properties) {
+        List<TypeDef> sortedProperties = new ArrayList<TypeDef>(properties);
+        sortedProperties.sort(new Comparator<TypeDef>() {
+            @Override
+            public int compare(TypeDef prop1, TypeDef prop2) {
+                return Boolean.compare(prop2.required, prop1.required);
+            }
+        });
+        return sortedProperties;
     }
 }

@@ -99,11 +99,16 @@ public class OpenApiParser {
     TypeDef getType(
             JsonNode prop,
             boolean asObject,
-            String propName, boolean forModel) {
+            String propName,
+            boolean forModel,
+            boolean requiredInStruct) {
 
         String desc = prop.get("description") == null ? "" : prop.get("description").asText();
         String goName = prop.get("x-go-name") != null ? prop.get("x-go-name").asText() : "";
         JsonNode refNode = prop.get("$ref");
+
+        // Override passed required value if the prop itself is marked as required in the parent struct
+        boolean required = requiredInStruct || isRequired(prop);
 
         // This is an OpenAPI 3.0 thing, no plans for real OpenAPI 3.0 support at the moment.
         if (refNode == null && prop.get("schema") != null) {
@@ -116,12 +121,13 @@ public class OpenApiParser {
             // Need to check here if this type does not have a class of its own
             // No C/C++ style typedef in java, and this type could be a class with no properties
             prop = getFromRef(refNode.asText());
+            required = requiredInStruct || isRequired(prop);
             if (desc.isEmpty()) {
                 desc = prop.get("description") == null ? "" : prop.get("description").asText();
             }
             // TODO: Why does this need to be handled outside the main switch below?
             if (hasProperties(prop)) {
-                return new TypeDef(refType, refType, "", propName, goName, desc, isRequired(prop), refType, null, null, null, null, goName);
+                return new TypeDef(refType, refType, "", propName, goName, desc, required, refType, null, null, null, null, goName);
             }
         }
 
@@ -140,15 +146,15 @@ public class OpenApiParser {
         if (!format.isEmpty() ) {
             switch (format) {
             case "uint64":
-                return new TypeDef("java.math.BigInteger", openApiType, "", propName, goName, desc, isRequired(prop), null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("java.math.BigInteger", openApiType, "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
             case "RFC3339 String":
-                return new TypeDef("Date", "time", "", propName, goName, desc, isRequired(prop), null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("Date", "time", "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
             case "Address":
                 return new TypeDef("Address", "address", "getterSetter", propName,
-                        goName, desc, isRequired(prop), null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                        goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
 
             case "SignedTransaction":
-                return new TypeDef("SignedTransaction", format, "", propName, goName, desc, isRequired(prop), null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("SignedTransaction", format, "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
             case "binary":
             case "byte":
             case "base64":
@@ -166,32 +172,32 @@ public class OpenApiParser {
 
                     // getterSetter typeName is only used in path.
                     return new TypeDef("", rawType, "getterSetter,array",
-                            propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                            propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
                 } else {
                     return new TypeDef("byte[]", "binary", "getterSetter",
-                            propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                            propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
                 }
             case "AccountID":
                 break;
             case "BlockCertificate":
             case "BlockHeader":
-                return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
             }
         }
         switch (openApiType) {
         case "integer":
             String longName = asObject ? "Long" : "long";
-            return new TypeDef(longName, openApiType, "", propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef(longName, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         case "object":
-            return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         case "string":
-            return new TypeDef("String", openApiType, "", propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef("String", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         case "boolean":
             String boolName = asObject ? "Boolean" : "boolean";
-            return new TypeDef(boolName, openApiType, "", propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef(boolName, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         case "array":
             // Resolve references
-            TypeDef typeName = getType(arrayTypeNode, asObject, propName, forModel);
+            TypeDef typeName = getType(arrayTypeNode, asObject, propName, forModel, required);
             String oldArrayType = openApiType;
             if (typeName.isOfType("getterSetter")) {
                 oldArrayType += ",getterSetter";
@@ -206,10 +212,10 @@ public class OpenApiParser {
                 //resolvedAlgoFormat = typeName.openApiRefType;
             }
             return new TypeDef("List<" + typeName.javaTypeName + ">", typeName.rawTypeName,
-                    oldArrayType, propName, goName, desc, isRequired(prop),
+                    oldArrayType, propName, goName, desc, required,
                     refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName);
         default:
-            return new TypeDef(openApiType, openApiType, "", propName, goName, desc, isRequired(prop), refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef(openApiType, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         }
     }
 
@@ -281,6 +287,28 @@ public class OpenApiParser {
         return null;
     }
 
+    // Extract a list of required properties from a parent node
+    // Works for multiple parent node structures
+    Set<String> extractRequiredProperties(JsonNode parentNode) {
+        Set<String> requiredProperties = new HashSet<>();
+        Iterator<JsonNode> required = null;
+
+        // Required property directly in parent node
+        if (parentNode.has("required") && parentNode.get("required").isArray()) {
+            required = parentNode.get("required").elements();
+        // Required property wrapped in a `schema` property
+        } else if (parentNode.has("schema") && parentNode.get("schema").has("required") && parentNode.get("schema").get("required").isArray()) {
+            required = parentNode.get("schema").get("required").elements();
+        }
+
+        while (required != null && required.hasNext()) {
+            JsonNode r = required.next();
+            requiredProperties.add(r.asText());
+        }
+
+        return requiredProperties;
+    }
+
     // writeClass writes the Model class.
     // This is the root method for writing the complete class.
     void writeClass(String className,
@@ -291,14 +319,7 @@ public class OpenApiParser {
         logger.debug("Generating ... {}", className);
 
         // Collect any required fields for this definition.
-        Set<String> requiredProperties = new HashSet<>();
-        if (parentNode.has("required") && parentNode.get("required").isArray()) {
-            Iterator<JsonNode> required = parentNode.get("required").elements();
-            while (required.hasNext()) {
-                JsonNode r = required.next();
-                requiredProperties.add(r.asText());
-            }
-        }
+        Set<String> requiredProperties = extractRequiredProperties(parentNode);
 
         // Collect any mutually exclusive fields for this definition.
         Set<String> mutuallyExclusiveProperties = new HashSet<>();
@@ -313,7 +334,7 @@ public class OpenApiParser {
         List<TypeDef> properties = new ArrayList<>();
         for (Map.Entry<String, JsonNode> prop : getSortedProperties(propertiesNode).entrySet()) {
             String jprop = prop.getKey();
-            TypeDef typeObj = getType(prop.getValue(), true, jprop, true);
+            TypeDef typeObj = getType(prop.getValue(), true, jprop, true, requiredProperties.contains(jprop));
             properties.add(typeObj);
         }
 
@@ -356,7 +377,7 @@ public class OpenApiParser {
         while (properties != null && properties.hasNext()) {
             Entry<String, JsonNode> prop = properties.next();
             String propName = Tools.getCamelCase(prop.getKey(), false);
-            TypeDef propType = getType(prop.getValue(), true, prop.getKey(), false);
+            TypeDef propType = getType(prop.getValue(), true, prop.getKey(), false, false);
 
             // The parameters are either in the path or in the query
 
