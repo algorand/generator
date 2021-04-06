@@ -4,8 +4,16 @@ set -e
 rootdir=`dirname $0`
 pushd $rootdir/.. > /dev/null
 
-# Build generator
+# ==============================
+# > BUILD GENERATOR
+# ==============================
+
 mvn package
+
+
+# ==============================
+# > CLONE SPECIFICATION REPOS
+# ==============================
 
 GO_ALGORAND_DIR="clones/go-algorand"
 INDEXER_DIR="clones/indexer"
@@ -26,3 +34,14 @@ if [[ -d "$INDEXER_DIR" ]]; then
 else
   git clone https://github.com/algorand/indexer "$INDEXER_DIR"
 fi
+
+# ============================================================
+# > SET UP GIT CREDENTIALS
+# ------------------------------------------------------------
+#
+# GitHub credentials require only a `GITHUB_TOKEN` environment
+# variable, but `git` credentials require explicit setup.
+#
+# ============================================================
+
+git config credential.helper '!f() { sleep 1; echo "username=${GITHUB_USER}"; echo "password=${GITHUB_TOKEN}"; }; f'

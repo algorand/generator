@@ -71,15 +71,26 @@ gclonecd $REPO $BRANCH
 # > RUNNER
 # ==============================
 
-# Set up paths
-pushd .. > /dev/null
-ALGOD_SPEC="`pwd`/go-algorand/daemon/algod/api/algod.oas2.json"
-INDEXER_SPEC="`pwd`/indexer/api/indexer.oas2.json"
-pushd .. > /dev/null
+# Set up spec paths and details about each spec's latest commit
+pushd ../go-algorand > /dev/null
+ALGOD_SPEC="`pwd`/daemon/algod/api/algod.oas2.json"
+ALGOD_SPEC_HASH=`git log -n 1 --pretty=format:%h -- daemon/algod/api/algod.oas2.json`
+ALGOD_SPEC_COMMIT_MSG=`git log -n 1 --pretty=format:%s -- daemon/algod/api/algod.oas2.json`
+popd > /dev/null
+pushd ../indexer > /dev/null
+INDEXER_SPEC="`pwd`/api/indexer.oas2.json"
+INDEXER_SPEC_HASH=`git log -n 1 --pretty=format:%h -- api/indexer.oas2.json`
+INDEXER_SPEC_COMMIT_MSG=`git log -n 1 --pretty=format:%s -- api/indexer.oas2.json`
+popd > /dev/null
+
+# Set up generator jar path
+pushd ../../ > /dev/null
 JAR_WILDCARD_PATTERN="`pwd`/target/generator-*-jar-with-dependencies.jar"
 JAR_WILDCARD_FILES=($JAR_WILDCARD_PATTERN)
 TEMPLATE_JAR=${JAR_WILDCARD_FILES[1]}
-popd > /dev/null
+if [[ -z $TEMPLATE_JAR ]]; then
+  TEMPLATE_JAR=${JAR_WILDCARD_FILES}
+fi
 popd > /dev/null
 
 # Error if a Dockerfile is not present
@@ -113,12 +124,71 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Don't continue if there were no changes
+if git diff-index --quiet HEAD --; then
+  echo "No changes after code generation, stopping"
+  exit 0
+fi
+
 # ==============================
 # > CREATE BRANCH
 # ==============================
 
+# Generate an identifier for this PR (first four chars of algod/indexer hashes, concatenated)
+PR_ID="${ALGOD_SPEC_HASH:0:4}${INDEXER_SPEC_HASH:0:4}"
+PR_BRANCH="generate/$PR_ID"
 
+# Don't continue if a remote branch has already been created
+REMOTE_PR_BRANCH_EXISTS=`git ls-remote origin $PR_BRANCH | wc -l`
+if [ $REMOTE_PR_BRANCH_EXISTS -eq 1 ]; then
+  echo "Generated branch already exists, stopping"
+  exit 1
+fi
+
+# Delete the branch if it exists locally
+PR_BRANCH_EXISTS=`git branch -v | grep $PR_BRANCH | wc -l`
+if [ $PR_BRANCH_EXISTS -eq 1 ]; then
+  git checkout $BRANCH
+  git branch -D $PR_BRANCH > /dev/null
+fi
+
+# Create a new branch
+git checkout -b $PR_BRANCH
+
+# Create commit and store hash
+git add .
+git commit -m "Regenerate code from specification file"
 
 # ==============================
 # > CREATE A PR
 # ==============================
+
+# Explicitly set repository in OWNER/REPO format
+REPO_NAME="$(basename "$REPO" .git)"
+REPO_DIRNAME="$(dirname "$REPO" .git)"
+REPO_OWNER="$(basename "$REPO_DIRNAME")"
+REPO_FULL_NAME="$REPO_OWNER/$REPO_NAME"
+
+# Design PR content
+ALGOD_REPO_URL="https://github.com/algorand/go-algorand"
+INDEXER_REPO_URL="https://github.com/algorand/indexer"
+
+PR_BODY="This PR was automatically created using [Algorand's code generator](https://github.com/algorand/generator) in response to the following commits:
+
+### Algod
+
+ - [$ALGOD_SPEC_HASH]($ALGOD_REPO_URL/commit/$ALGOD_SPEC_HASH) – $ALGOD_SPEC_COMMIT_MSG
+
+### Indexer
+
+ - [$INDEXER_SPEC_HASH]($INDEXER_REPO_URL/commit/$INDEXER_SPEC_HASH) - $INDEXER_SPEC_COMMIT_MSG
+
+
+> **Disclaimer:** I'm just a bot. Feel free to make changes to this pull request as needed."
+
+gh pr create \
+  --repo $REPO_FULL_NAME \
+  --base $BRANCH \
+  --title "Regenerate code with the latest specification file ($PR_ID)" \
+  --body "$PR_BODY" \
+  --label "generated"
