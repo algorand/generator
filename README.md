@@ -164,3 +164,21 @@ query_skip=LookupAssetByID,LookupAccountTransactions,SearchForAssets,LookupAsset
 The Java templates are in the **java_templates** directory.
 
 These are not used yet, they are the initial experiments for the template engine. Since the Java SDK has used code generation from the beginning, we should be able to fully migrate to the template engine eventually.
+
+# Automation
+
+## Preparing an external repository for automatic code generation
+
+The automation will look in each passed GitHub repository for a `Dockerfile` in the `templates` directory, and will only run automatic code generation if one is present. For instructions on how to configure the `templates` directory, look at the [repository template directory example](./examples/repo_template_dir).
+
+## Setting up the automatic generator
+
+The automatic generator scripts depend on certain prerequisites that are listed in [automation/REQUIREMENTS.md](./automation/REQUIREMENTS.md). Once those conditions have been satisfied, automatically generating code for external repositories should be as easy as running the `automation/setup.sh` script, followed by the `automation/generate.sh` script for each individual, external repository, that requires generating.
+
+For example, the following commands would generate and open PRs against the develop branches in the JS and Go SDKs.
+
+```bash
+$ ./automation/setup.sh
+$ ./automation/generate.sh --repo "https://github.com/algorand/js-algorand-sdk" -b "develop"
+$ ./automation/generate.sh --repo "https://github.com/algorand/go-algorand-sdk" -b "develop"
+```
