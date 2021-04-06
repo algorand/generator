@@ -10,12 +10,15 @@ pushd $rootdir/.. > /dev/null
 
 function help() {
   echo "Automated generator script to open PRs on spec changes."
-  echo "-r|--repo - SDK GitHub repository, including the particular branch."
+  echo "-r|--repo - SDK GitHub repository."
+  echo "-b|--branch — Branch for the repository."
+  echo "-s|--skip-pr — Don't open a PR. Useful for testing "
   exit
 }
 
 REPO=
 BRANCH=
+SKIP_PR=false
 
 while (( "$#" )); do
   case "$1" in
@@ -25,6 +28,10 @@ while (( "$#" )); do
       ;;
     -b|--branch)
       BRANCH=$2
+      shift
+      ;;
+    -s|--skip-pr)
+      SKIP_PR=true
       shift
       ;;
     *)
@@ -127,6 +134,12 @@ fi
 # Don't continue if there were no changes
 if git diff-index --quiet HEAD --; then
   echo "No changes after code generation, stopping"
+  exit 0
+fi
+
+# Skip PR if the --skip-pr flag was set
+if [ "$SKIP_PR" = true ];  then
+  echo "Skip PR flag was set, stopping"
   exit 0
 fi
 
