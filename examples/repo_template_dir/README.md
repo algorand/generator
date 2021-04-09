@@ -6,9 +6,7 @@ Files in this directory are used by the [Algorand code generator](https://github
 
 ### Generation script
 
-Since different repositories have different requirements for code generation and formatting, we've outsourced the generation commands to each individual SDK repository through the use of a generation script. This file, typically named `generate.sh`, should contain every command required to generate and format code from the model schema. An example generation script is [included here](./generate.sh).
-
-This script will be used in the `Dockerfile` as the `CMD` argument. In practice, a distinct generation file separate from the `Dockerfile` is not necessary for simple scripts.
+Since different repositories have different requirements for code generation, we've outsourced the generation commands to each individual SDK repository through the use of a generation script. This file, named `generate.sh` and located in the SDK repository's `templates` directory, should contain every command required to generate code from the model schema. An example generation script is [included here](./generate.sh).
 
 When run from the Docker container, the generation script will include the following environment variables:
 
@@ -18,19 +16,10 @@ When run from the Docker container, the generation script will include the follo
 
 ### Docker
 
-A Docker environment is necessary for installing a repository's dependencies. Since the environment outlined above won't be included by default, you'll have to include environment variables in your Dockerfile like so:
+A Docker environment is necessary for installing a repository's dependencies in order to run post-generation scripts and formatters. The `Dockerfile` is a multi-stage stage build with the following structure:
 
-```dockerfile
-ENV TEMPLATE
-ENV ALGOD_SPEC
-ENV INDEXER_SPEC
-```
-
-Don't worry about setting values for these environment variables; they will be populated during runtime by the code generator automation.
-
-#### Requirements
-
-1. Since the code generation library requires a Java Runtime to run, be sure to include commands to install a JRE in your `Dockerfile`.
-2. Be sure to use the `/repo` work directory. The generator will assume that is the location where the repo is stored when attempting to open a PR.
+1. Builder - Takes the `algorand-generator` Docker image, builds the template command, and runs whatever commands are found in the `templates/generate.sh` script. The generated code is available afterwards in the `/repo` directory.
+2. Formatter — With a different base image than before, this stage is used to install dependencies and format the code before publishing. For example, the JavaScript SDK uses the `node` base image, installs dependencies, and runs the `Prettier` code formatter. Be sure to copy generated code from the previous stage before preparing files for publishing. We encourage repositories to utilize a `make format` command during this stage to improve consistency across the SDKs.
+3. Publisher — Reusing the image from the builder stage, the publish stage will create a new branch and open a pull request based on whatever code is found in the `/repo` directory. Make sure to copy the prepared code from the last stage.
 
 We've included [an example `Dockerfile`](./Dockerfile) in the `examples` directory, similar to the one being used by the JavaScript SDK.

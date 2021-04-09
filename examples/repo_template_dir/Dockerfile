@@ -1,25 +1,36 @@
+# ==============================
+# > BUILD AND GENERATE
+# ==============================
+
+FROM algorand-generator as generator
+
+# ... generator will build its jar file here and run the SDK repo's generation script ...
+
+# ==============================
+# > PER-SDK SECTION (FORMAT)
+# ==============================
+
 # Use any base image here
-FROM node:latest
+FROM node:latest as formatter
 
-# These environment variables will be populated automatically
-ENV TEMPLATE ""
-ENV ALGOD_SPEC ""
-ENV INDEXER_SPEC ""
-
-# Install Java (required by the code generator)
-RUN apt-get update && apt-get install -y libasound2 libxtst6
-RUN wget https://download.bell-sw.com/java/16+36/bellsoft-jdk16+36-linux-amd64.deb && \
-    apt install ./bellsoft-jdk16+36-linux-amd64.deb
-
-# Use the /repo work directory
+# Copy files from previous build stage
+COPY --from=generator /repo /repo
 WORKDIR /repo
-COPY package*.json .
 
 # Now you can install dependencies as needed
 RUN npm install
 
-# Copy everything else
-COPY . .
+# And then use any script you'd like here to format code
+RUN make format
 
-# And then use any script you'd like here to generate code
-CMD templates/generate.sh
+# ==============================
+# > PUBLISH
+# ==============================
+FROM generator as publisher
+
+# Copy work directory from previous stage to the /repo directory
+COPY --from=formatter /repo /repo
+
+# This line is implicitly run by default, but I included it for context:
+# -> It will create a new branch and open a PR
+CMD /scripts/publish.sh

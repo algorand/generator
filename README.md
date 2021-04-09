@@ -169,25 +169,10 @@ These are not used yet, they are the initial experiments for the template engine
 
 ## Preparing an external repository for automatic code generation
 
-The automation will look in each passed GitHub repository for a `Dockerfile` in the `templates` directory, and will only run automatic code generation if one is present. For instructions on how to configure the `templates` directory, look at the [repository template directory example](./examples/repo_template_dir).
+In general, the automation pipeline will build and run whatever `Dockerfile` is found in a repository's `templates` directory. For instructions on how to configure the `templates` directory, look at the [repository template directory example](./examples/repo_template_dir).
 
-If you are trying to verify that automatic code generation works as intended, we recommend creating a testing branch from that repository and using the `--skip-pr` flag to avoid creating pull requests. If all goes according to plan, generated files should be available in the `clones/[repository name]` directory.
+If you are trying to verify that automatic code generation works as intended, we recommend creating a testing branch from that repository and using the `SKIP_PR=true` environment variable to avoid creating pull requests. If all goes according to plan, generated files should be available in the container's `/repo` directory.
 
 ## Setting up the automatic generator
 
-The automatic generator scripts depend on certain prerequisites that are listed in [automation/REQUIREMENTS.md](./automation/REQUIREMENTS.md). Once those conditions have been satisfied, automatically generating code for external repositories should be as easy as running the `automation/setup.sh` script, followed by the `automation/generate.sh` script for each individual, external repository, that requires generating.
-
-For example, the following commands would generate and open PRs against the develop branches in the JS and Go SDKs.
-
-```bash
-$ ./automation/setup.sh
-$ ./automation/generate.sh --repo "https://github.com/algorand/js-algorand-sdk" --branch "develop"
-$ ./automation/generate.sh --repo "https://github.com/algorand/go-algorand-sdk" --branch "develop"
-```
-
-Or more concisely using the comma-separated `GH_REPOS` environment variable:
-
-```bash
-$ export GH_REPOS="https://github.com/algorand/js-algorand-sdk.git#develop,https://github.com/algorand/go-algorand-sdk"
-$ ./automation/run.sh
-```
+The automatic generator scripts depend on certain prerequisites that are listed in [automation/REQUIREMENTS.md](./automation/REQUIREMENTS.md). Once those conditions have been satisfied, automatically generating code for external repositories should be as easy as building and running a particular SDK's `templates/Dockerfile` file.
