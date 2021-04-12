@@ -81,9 +81,12 @@ import BlockHeader from '../../../../types/blockHeader';
 export class $def.name extends BaseModel {
 #if ($use_object_params)
 #foreach( $prop in $props )
+  /**
+   * $str.formatDoc($prop.doc, "   * ")
+   */
   public #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop);
-#end
 
+#end
 #end
   /**
    * Creates a new `$def.name` object.
