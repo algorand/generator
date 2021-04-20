@@ -164,3 +164,15 @@ query_skip=LookupAssetByID,LookupAccountTransactions,SearchForAssets,LookupAsset
 The Java templates are in the **java_templates** directory.
 
 These are not used yet, they are the initial experiments for the template engine. Since the Java SDK has used code generation from the beginning, we should be able to fully migrate to the template engine eventually.
+
+# Automation
+
+## Preparing an external repository for automatic code generation
+
+In general, the automation pipeline will build and run whatever `Dockerfile` is found in a repository's `templates` directory. For instructions on how to configure the `templates` directory, look at the [repository template directory example](./examples/repo_template_dir).
+
+If you are trying to verify that automatic code generation works as intended, we recommend creating a testing branch from that repository and using the `SKIP_PR=true` environment variable to avoid creating pull requests. If all goes according to plan, generated files should be available in the container's `/repo` directory.
+
+## Setting up the automatic generator
+
+The automatic generator scripts depend on certain prerequisites that are listed in [automation/REQUIREMENTS.md](./automation/REQUIREMENTS.md). Once those conditions have been satisfied, automatically generating code for external repositories should be as easy as building and running a particular SDK's `templates/Dockerfile` file.

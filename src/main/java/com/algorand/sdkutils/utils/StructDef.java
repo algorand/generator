@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Comparator;
 import java.util.Set;
 
-public class StructDef {
+public class StructDef implements Comparable<StructDef> {
 
     public String name;
     public String aliasOf;
@@ -51,6 +51,11 @@ public class StructDef {
                 "doc: '" + doc + "', " +
                 "required: ['" + String.join("', '", requiredProperties) + "'], " +
                 "mutuallyExclusive: ['" + String.join("', '", mutuallyExclusiveProperties) + "']";
+    }
+
+    @Override
+    public int compareTo(StructDef struct) {
+        return this.name.compareTo(struct.name);
     }
 
     public String getName() {

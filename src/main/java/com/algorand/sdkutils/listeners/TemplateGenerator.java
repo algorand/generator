@@ -84,7 +84,7 @@ public class TemplateGenerator implements Subscriber {
     /////////////////////////////
 
     // Model definitions.
-    private HashMap<StructDef, List<TypeDef>> models = new HashMap<>();
+    private TreeMap<StructDef, List<TypeDef>> models = new TreeMap<>();
 
     // Query definitions.
     private List<QueryDef> queries = new ArrayList<>();
