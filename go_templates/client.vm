@@ -46,6 +46,14 @@ func MakeClient(address string, apiToken string) (c *Client, err error) {
        return
 }
 
+// MakeClientWithHeaders is the factory for constructing a ClientV2 for a
+// given endpoint with custom headers.
+func MakeClientWithHeaders(address string, apiToken string, headers []*common.Header) (c *Client, err error) {
+       commonClientWithHeaders, err := common.MakeClientWithHeaders(address, authHeader, apiToken, headers)
+       c = (*Client)(commonClientWithHeaders)
+       return
+}
+
 ## Given a query print the arg list to the function.
 #macro( queryToClientArgs $query )
 #set( $sep = "" )
@@ -82,6 +90,6 @@ func (c *Client) ${queryType}(#queryToClientArgs($q)) *$queryType {
 #if( $propFile.query_package == "algod" )
 
 func (c *Client) BlockRaw(round uint64) *BlockRaw {
-	return &BlockRaw{c: c, round: round}
+  return &BlockRaw{c: c, round: round}
 }
 #end
