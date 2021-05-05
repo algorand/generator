@@ -32,21 +32,18 @@ fi
 # ============================================================
 
 git config credential.helper '!f() { sleep 1; echo "username=${GITHUB_USER}"; echo "password=${GITHUB_TOKEN}"; }; f'
-git config --global pull.ff only
 git config --global user.name "Algorand Generation Bot"
 git config --global user.email "$GITHUB_EMAIL"
 
 # ========================================================
-# > PULL LATEST CHANGES & EXPORT DATA FROM SPEC FILES
+# > EXPORT DATA FROM SPEC FILES
 # ========================================================
 
 pushd "$GO_ALGORAND_DIR" > /dev/null
-git pull
 export ALGOD_SPEC_HASH=`git log -n 1 --pretty=format:%h -- daemon/algod/api/algod.oas2.json`
 export ALGOD_SPEC_COMMIT_MSG=`git log -n 1 --pretty=format:%s -- daemon/algod/api/algod.oas2.json`
 popd > /dev/null
 pushd "$INDEXER_DIR" > /dev/null
-git pull
 export INDEXER_SPEC_HASH=`git log -n 1 --pretty=format:%h -- api/indexer.oas2.json`
 export INDEXER_SPEC_COMMIT_MSG=`git log -n 1 --pretty=format:%s -- api/indexer.oas2.json`
 popd > /dev/null
@@ -69,19 +66,26 @@ fi
 # Delete the branch if it exists locally
 PR_BRANCH_EXISTS=`git branch -v | grep $PR_BRANCH | wc -l`
 if [ $PR_BRANCH_EXISTS -eq 1 ]; then
-  git checkout $BRANCH
+  git -c core.hooksPath=/dev/null checkout $BRANCH # disable git hooks https://stackoverflow.com/a/61485071
   git branch -D $PR_BRANCH > /dev/null
 fi
 
 # Create a new branch
-git checkout -b $PR_BRANCH
+git -c core.hooksPath=/dev/null checkout -b $PR_BRANCH # disable git hooks https://stackoverflow.com/a/61485071
+
+# Exit without error if there are no changes to commit
+CHANGED=`git diff --name-only HEAD --`
+if [ -z "$CHANGED" ]; then
+  echo "No new changes, exiting"
+  exit 0
+fi
 
 # Create commit and store hash
 git add .
-git commit -m "Regenerate code from specification file"
+git commit --no-verify -m "Regenerate code from specification file"
 
 # Push
-git push --set-upstream origin $PR_BRANCH
+git -c core.hooksPath=/dev/null checkout push --set-upstream origin $PR_BRANCH # disable git hooks https://stackoverflow.com/a/61485071
 
 # ==============================
 # > CREATE A PR
