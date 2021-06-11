@@ -15,6 +15,15 @@ You'll see that there are a number of subcommands:
 * **responses** - generate randomized testfiles for SDK unit tests.
 * **template** - a generator that uses velocity templates rather than Java code to configure the code generation.
 
+### Code layout
+
+The command line interface uses JCommander to define the command line interface. See Main.java.
+
+The main code involves an OpenAPI parser / event generator and several listeners for the actual generation.
+
+![object layout](docs/layout.png)
+
+
 # Templates
 
 The template subcommand is using [Apache Velocity](https://velocity.apache.org/) as the underlying template engine. Things like variables, loops, and statements are all supported. So business logic can technically be implemented in the template if it's actually necessary.
