@@ -85,7 +85,7 @@ git add .
 git commit --no-verify -m "Regenerate code from specification file"
 
 # Push
-git -c core.hooksPath=/dev/null checkout push --set-upstream origin $PR_BRANCH # disable git hooks https://stackoverflow.com/a/61485071
+git -c core.hooksPath=/dev/null push --set-upstream origin $PR_BRANCH # disable git hooks https://stackoverflow.com/a/61485071
 
 # ==============================
 # > CREATE A PR
