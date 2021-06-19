@@ -1,8 +1,8 @@
 # generator
-This is a general purpose OpenAPI code generator. It is currently used to completely generate the http code in the Java SDK, and generate some of the http code in our golang SDK.
+This is a general purpose OpenAPI code generator. It is currently used to completely generate the HTTP code in the Java SDK, and generate some of the HTTP code in our Golang SDK.
 
 # Usage
-We currently have two http endpoints. One for algod and one for indexer, so in most cases this tool would be run once with each OpenAPI spec.
+We currently have two HTTP endpoints. One for algod and one for indexer, so in most cases, this tool would be run once with each OpenAPI spec.
 
 ### Build as a self-executing jar:
 ```
@@ -12,7 +12,7 @@ We currently have two http endpoints. One for algod and one for indexer, so in m
 
 You'll see that there are a number of subcommands:
 * **java** - the original Java SDK generator.
-* **responses** - generate randomized testfiles for SDK unit tests.
+* **responses** - generate randomized test files for SDK unit tests.
 * **template** - a generator that uses velocity templates rather than Java code to configure the code generation.
 
 ### Code layout
@@ -28,7 +28,7 @@ The main code involves an OpenAPI parser / event generator and several listeners
 
 The template subcommand is using [Apache Velocity](https://velocity.apache.org/) as the underlying template engine. Things like variables, loops, and statements are all supported. So business logic can technically be implemented in the template if it's actually necessary.
 
-### template files
+### Template files
 There are three phases: **client**, **query**, and **model**. Each phase must provide two templates, one for the file generation and one to specify the filename to be used. If all results should go to the same file. For **query** and **model** generation the template will be executed once for each **query** / **model**. If you want to put everything in one file return the same filename twice in a row and the processing will exit early.
 
 | phase | filename | purpose |
@@ -40,7 +40,7 @@ There are three phases: **client**, **query**, and **model**. Each phase must pr
 | model  | model.vm           | Template to use for generating model files. |
 | model  | model_filename.vm  | File to write to the model output directory. |
 
-### output directories
+### Output directories
 The template command will only run the templates which have an output directory is provided. So if you just want to regenerate models, only use the **-m** option.
 ```
   -c, --clientOutputDir
@@ -51,7 +51,7 @@ The template command will only run the templates which have an output directory 
     Directory to write query file(s).
 ```
 
-### property files
+### Property files
 The template subcommand accepts a **--propertyFiles** option. It can be provided multiple times, or as a comma separated list of files. Property files will be processed and bound to a velocity variable available to templates.
 
 ### template variables
@@ -69,9 +69,9 @@ For details on a type you can put it directly into your template. It will be ser
 | model    | def      | `StructDef` | The current model definition if multiple files are being generated. |
 | model    | props    | `List<TypeDef>` | A list of properties for the current model. |
 
-### example usage
+### Example usage
 
-In the following example we are careful to generate the algod code first, because the algod models are a strict subset of the indexer models. For that reason we are able to reuse some overlapping models from indexer in algod.
+In the following example, we are careful to generate the algod code first because the algod models are a strict subset of the indexer models. For that reason, we are able to reuse some overlapping models from indexer in algod.
 ```
 ~$ java -jar generator*jar template
         -s algod.oas2.json
@@ -108,9 +108,9 @@ You can generate the test code in the **output** directory with the following co
 
 # Golang Template
 
-The go templates are in the **go_templates** directory.
+The Golang templates are in the **go_templates** directory.
 
-The go http API is only partially generated. The hand written parts were not totally consistent with the spec and that makes it difficult to regenerate them. Regardless, an attempt has been made. In the templates there are some macros which map "generated" values to the hand written ones. For example the query types have this mapping:
+The Golang HTTP API is only partially generated. The hand written parts were not totally consistent with the spec and that makes it difficult to regenerate them. Regardless, an attempt has been made. In the templates there are some macros which map "generated" values to the hand written ones. For example the query types have this mapping:
 ```
 #macro ( queryType )
 #if ( ${str.capitalize($q.name)} == "SearchForAccounts" )
