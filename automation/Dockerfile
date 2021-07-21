@@ -32,6 +32,7 @@ ENV GO_ALGORAND_DIR="/clones/go-algorand"
 ENV INDEXER_DIR="/clones/indexer"
 
 ENV TEMPLATE="java -jar /usr/src/app/target/generator-*-jar-with-dependencies.jar template"
+ENV GENERATOR="java -jar /usr/src/app/target/generator-*-jar-with-dependencies.jar"
 ENV ALGOD_SPEC="${GO_ALGORAND_DIR}/daemon/algod/api/algod.oas2.json"
 ENV INDEXER_SPEC="${INDEXER_DIR}/api/indexer.oas2.json"
 

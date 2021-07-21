@@ -20,8 +20,9 @@ pushd $rootdir/.. > /dev/null
 
 function help {
   echo "Options:"
-  echo "   -indexer-spec  full path to indexer.oas3.yml"
-  echo "   -algod-spec    full path to algod.oas3.yml"
+  echo "   --sdk-dir       full path to java SDK directory"
+  echo "   --indexer-spec  full path to indexer.oas2.json"
+  echo "   --algod-spec    full path to algod.oas2.json"
 }
 
 function my_exit {
