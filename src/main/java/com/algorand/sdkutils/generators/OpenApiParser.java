@@ -138,6 +138,7 @@ public class OpenApiParser {
         String openApiAlgorandFormat = typeNode.has("x-algorand-format") ? typeNode.get("x-algorand-format").asText() : null;
         JsonNode arrayTypeNode = typeNode.get("items");
         String openApiArrayType = arrayTypeNode != null && arrayTypeNode.has("type") ? arrayTypeNode.get("type").asText() : null;
+        openApiFormat = openApiFormat == null && arrayTypeNode != null && arrayTypeNode.has("format") ? arrayTypeNode.get("format").asText() : openApiFormat;
 
         if (prop.get("enum") != null) {
             return getEnum(prop, propName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
