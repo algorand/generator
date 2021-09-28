@@ -138,6 +138,7 @@ public class OpenApiParser {
         String openApiAlgorandFormat = typeNode.has("x-algorand-format") ? typeNode.get("x-algorand-format").asText() : null;
         JsonNode arrayTypeNode = typeNode.get("items");
         String openApiArrayType = arrayTypeNode != null && arrayTypeNode.has("type") ? arrayTypeNode.get("type").asText() : null;
+        openApiFormat = openApiFormat == null && arrayTypeNode != null && arrayTypeNode.has("format") ? arrayTypeNode.get("format").asText() : openApiFormat;
 
         if (prop.get("enum") != null) {
             return getEnum(prop, propName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
@@ -448,15 +449,18 @@ public class OpenApiParser {
 
         JsonNode paramNode = spec.get("parameters");
         String returnType = "String";
-        if (spec.has("responses") && spec.get("responses").has("200") &&
-                spec.get("responses").get("200").get("$ref") != null) {
-            returnType = spec.get("responses").get("200").get("$ref").asText();
-            JsonNode returnTypeNode = this.getFromRef(returnType);
-            if (returnTypeNode.get("schema").get("$ref") != null) {
-                returnType = OpenApiParser.getTypeNameFromRef(returnTypeNode.get("schema").get("$ref"));
-            } else {
-                returnType = OpenApiParser.getTypeNameFromRef(spec.get("responses").get("200").get("$ref"));
-                returnType = Tools.getCamelCase(returnType, true);
+        if (spec.has("responses") && spec.get("responses").has("200")) {
+            if (spec.get("responses").get("200").get("$ref") != null) {
+                returnType = spec.get("responses").get("200").get("$ref").asText();
+                JsonNode returnTypeNode = this.getFromRef(returnType);
+                if (returnTypeNode.get("schema").get("$ref") != null) {
+                    returnType = OpenApiParser.getTypeNameFromRef(returnTypeNode.get("schema").get("$ref"));
+                } else {
+                    returnType = OpenApiParser.getTypeNameFromRef(spec.get("responses").get("200").get("$ref"));
+                    returnType = Tools.getCamelCase(returnType, true);
+                }
+            } else if (spec.get("responses").get("200").has("schema") && spec.get("responses").get("200").get("schema").has("$ref")) {
+                returnType = OpenApiParser.getTypeNameFromRef(spec.get("responses").get("200").get("schema").get("$ref"));
             }
         }
         String desc = "";
