@@ -953,7 +953,7 @@ final class JavaModelWriter {
                 "         }\n" +
                 "         return ret; \n" +
                 "     }\n" +
-                "    public List<byte[]> " + javaName + ";\n");
+                "    public List<byte[]> " + javaName + " = new ArrayList<byte[]>();\n");
     }
 
     // Get base64 encoded byte[] type.
