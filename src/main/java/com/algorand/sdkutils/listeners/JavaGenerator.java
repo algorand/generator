@@ -19,8 +19,6 @@ import com.algorand.sdkutils.utils.StructDef;
 import com.algorand.sdkutils.utils.Tools;
 import com.algorand.sdkutils.utils.TypeDef;
 
-import javax.tools.Tool;
-
 public class JavaGenerator implements Subscriber {
 
     public static final String TAB = "    ";
