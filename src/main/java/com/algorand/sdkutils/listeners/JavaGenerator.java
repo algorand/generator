@@ -19,6 +19,8 @@ import com.algorand.sdkutils.utils.StructDef;
 import com.algorand.sdkutils.utils.Tools;
 import com.algorand.sdkutils.utils.TypeDef;
 
+import javax.tools.Tool;
+
 public class JavaGenerator implements Subscriber {
 
     public static final String TAB = "    ";
@@ -828,7 +830,7 @@ final class JavaModelWriter {
         Tools.addImport(imports, "java.util.Objects"); // used by Objects.deepEquals
 
         Tools.addImport(imports, "com.algorand.algosdk.v2.client.common.PathResponse");
-        Tools.addImport(imports, "com.fasterxml.jackson.annotation.JsonProperty");
+        Tools.addImport(imports, "com.fasterxml.jackson.annotation.*");
 
         currentModelBuffer = new StringBuilder();
         if (sDef.doc != null) {
@@ -938,22 +940,24 @@ final class JavaModelWriter {
         String propName = typeObj.propertyName;
         String javaName = Tools.getCamelCase(propName, false);
 
-        sb.append("    @JsonProperty(\"" + propName + "\")\n" +
+        sb.append(
+                "    @JsonProperty(\"" + propName + "\")\n" +
+                "    public List<byte[]> " + javaName + " = new ArrayList<byte[]>();\n" +
+                "    @JsonIgnore\n" +
                 "    public void " + javaName + "(List<String> base64Encoded) {\n" +
-                "         this." + javaName + " = new ArrayList<byte[]>();\n" +
-                "         for (String val : base64Encoded) {\n" +
-                "             this." + javaName + ".add(Encoder.decodeFromBase64(val));\n" +
-                "         }\n" +
-                "     }\n" +
-                "     @JsonProperty(\"" + propName + "\")\n" +
-                "     public List<String> " + javaName + "() {\n" +
-                "         ArrayList<String> ret = new ArrayList<String>();\n" +
-                "         for (byte[] val : this." + javaName + ") {\n" +
-                "             ret.add(Encoder.encodeToBase64(val));\n" +
-                "         }\n" +
-                "         return ret; \n" +
-                "     }\n" +
-                "    public List<byte[]> " + javaName + " = new ArrayList<byte[]>();\n");
+                "        this." + javaName + " = new ArrayList<byte[]>();\n" +
+                "        for (String val : base64Encoded) {\n" +
+                "            this." + javaName + ".add(Encoder.decodeFromBase64(val));\n" +
+                "        }\n" +
+                "    }\n" +
+                "    @JsonIgnore\n" +
+                "    public List<String> " + javaName + "() {\n" +
+                "        ArrayList<String> ret = new ArrayList<String>();\n" +
+                "        for (byte[] val : this." + javaName + ") {\n" +
+                "            ret.add(Encoder.encodeToBase64(val));\n" +
+                "        }\n" +
+                "        return ret; \n" +
+                "    }\n");
     }
 
     // Get base64 encoded byte[] type.
