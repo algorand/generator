@@ -828,7 +828,7 @@ final class JavaModelWriter {
         Tools.addImport(imports, "java.util.Objects"); // used by Objects.deepEquals
 
         Tools.addImport(imports, "com.algorand.algosdk.v2.client.common.PathResponse");
-        Tools.addImport(imports, "com.fasterxml.jackson.annotation.*");
+        Tools.addImport(imports, "com.fasterxml.jackson.annotation.JsonProperty");
 
         currentModelBuffer = new StringBuilder();
         if (sDef.doc != null) {
@@ -889,6 +889,8 @@ final class JavaModelWriter {
                 getBase64Encoded(typeObj, buffer);
                 return;
             }
+            // TODO add JsonIgnore here
+            Tools.addImport(imports, "com.fasterxml.jackson.annotation.JsonIgnore");
             getBase64EncodedArray(typeObj, buffer, forModel);
 
         }
