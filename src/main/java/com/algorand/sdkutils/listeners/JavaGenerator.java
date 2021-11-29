@@ -889,7 +889,7 @@ final class JavaModelWriter {
                 getBase64Encoded(typeObj, buffer);
                 return;
             }
-            // TODO add JsonIgnore here
+
             Tools.addImport(imports, "com.fasterxml.jackson.annotation.JsonIgnore");
             getBase64EncodedArray(typeObj, buffer, forModel);
 
