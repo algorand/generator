@@ -344,10 +344,21 @@ public class OpenApiParser {
         }
 
         List<TypeDef> properties = new ArrayList<>();
-        for (Map.Entry<String, JsonNode> prop : getSortedProperties(propertiesNode).entrySet()) {
-            String jprop = prop.getKey();
-            TypeDef typeObj = getType(prop.getValue(), true, jprop, true, requiredProperties.contains(jprop));
+
+        // type: object
+        if (propertiesNode != null) {
+            for (Map.Entry<String, JsonNode> prop : getSortedProperties(propertiesNode).entrySet()) {
+                String jprop = prop.getKey();
+                TypeDef typeObj = getType(prop.getValue(), true, jprop, true, requiredProperties.contains(jprop));
+                properties.add(typeObj);
+            }
+        }
+        // type: array
+        else if (parentNode.has("schema") && parentNode.get("schema").has("type") && parentNode.get("schema").get("type").asText().equals("array")) {
+            TypeDef typeObj = getType(parentNode.get("schema"), true, "", true, false);
             properties.add(typeObj);
+        } else {
+            throw new RuntimeException("Unexpected type.");
         }
 
         publisher.publish(event, new StructDef(className, desc, properties, requiredProperties, mutuallyExclusiveProperties));
