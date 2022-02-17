@@ -21,6 +21,8 @@ uint64##
 string##
 #elseif ( $param.type == "boolean" )
 bool##
+#elseif( $param.arrayType == "string" )
+[]string##
 #elseif ( $!param.refType )
 models.${param.refType}##
 #else
