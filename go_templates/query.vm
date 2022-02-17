@@ -56,7 +56,11 @@ type ${paramsType} struct {
 #if ( "#queryParamTypeName($qp)" != "" )
 
   // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "  // ")
-  #queryParamTypeName($qp) #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
+  #if ( $qp.arrayType == "string" )
+    #queryParamTypeName($qp) []string `url:"$qp.propertyName,omitempty,comma"`
+  #else
+    #queryParamTypeName($qp) #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
+  #end
 #end
 #end
 }
