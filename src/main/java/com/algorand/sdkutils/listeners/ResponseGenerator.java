@@ -135,7 +135,8 @@ public class ResponseGenerator implements Subscriber {
 
     private void export(ExportType export) {
         // Export the object.
-        List<ObjectNode> nodes = getObject(export.struct, export.properties);
+        List<ObjectNode> nodes =
+            getObject(export.struct, export.properties, new HashMap());
 
         try (Stream<Path> existing = Files.list(args.outputDirectory.toPath())){
             List<Path> existingFiles = existing.collect(Collectors.toList());
@@ -181,12 +182,16 @@ public class ResponseGenerator implements Subscriber {
      *
      * If the object has mutually exclusive fields, multiple objects will be generated. One with each of the options.
      */
-    private List<ObjectNode> getObject(StructDef def, List<TypeDef> properties) {
+    private List<ObjectNode> getObject(StructDef def, List<TypeDef> properties, HashMap<String, Integer> enteredTypes) {
+        enteredTypes.put(def.name, enteredTypes.getOrDefault(def.name, 0) + 1);
+
         List<ObjectNode> nodes = new ArrayList<>();
 
         // No exclusions
         if (def.mutuallyExclusiveProperties.isEmpty()) {
-            nodes.addAll(getObjectWithExclusions(def, properties, ImmutableList.of()));
+            nodes.addAll(getObjectWithExclusions(
+                def, properties, ImmutableList.of(), enteredTypes));
+            enteredTypes.put(def.name, enteredTypes.get(def.name) - 1);
             return nodes;
         }
 
@@ -195,32 +200,35 @@ public class ResponseGenerator implements Subscriber {
             List exclusions = def.mutuallyExclusiveProperties.stream()
                     .filter(f -> !f.equals(field))
                     .collect(Collectors.toList());
-            nodes.addAll(getObjectWithExclusions(def, properties, exclusions));
+            nodes.addAll(getObjectWithExclusions(
+                def, properties, exclusions, enteredTypes));
         }
+        enteredTypes.put(def.name, enteredTypes.get(def.name) - 1);
         return nodes;
     }
 
-    private List<ObjectNode> getObjectWithExclusions(StructDef def, List<TypeDef> properties, List<String> exclusions) {
+    private List<ObjectNode> getObjectWithExclusions(StructDef def, List<TypeDef> properties, List<String> exclusions, HashMap<String, Integer> enteredTypes) {
         List<ObjectNode> nodes = new ArrayList<>();
         nodes.add(mapper.createObjectNode());
         for (TypeDef prop : properties) {
             // Skip properties in the exclusion list
-            if (!exclusions.contains(prop.propertyName)) {
+            if (!exclusions.contains(prop.propertyName) &&
+                    (enteredTypes.getOrDefault(prop.rawTypeName, 0) <= 1)) {
                 List<JsonNode> propertyNodes = new ArrayList<>();
 
                 boolean isArray = prop.isOfType("array");
                 if (isArray) {
                     // TODO: Array size as part of format.
-                    int num = random.nextInt(10) + 1;
+                    int num = random.nextInt(5) + 1;
                     ArrayNode arr = mapper.createArrayNode();
                     while (arr.size() < num) {
                         // Add all because 'getData' may return more than one value.
-                        arr.addAll(getData(def, prop));
+                        arr.addAll(getData(def, prop, enteredTypes));
                     }
                     propertyNodes.add(arr);
                     //node.set(prop.propertyName, arr);
                 } else {
-                    propertyNodes.addAll(getData(def, prop));
+                    propertyNodes.addAll(getData(def, prop, enteredTypes));
                     //node.set(prop.propertyName, getData(def, prop));
                 }
 
@@ -248,7 +256,8 @@ public class ResponseGenerator implements Subscriber {
      * Generate a node containing randomized property data. If the node is a nested object there may be multiple
      * representations of the data.
      */
-    private List<JsonNode> getData(StructDef parent, TypeDef prop) {
+    private List<JsonNode> getData(
+            StructDef parent, TypeDef prop, HashMap<String, Integer> enteredTypes) {
         if (prop.enumValues != null) {
             int idx = random.nextInt(prop.enumValues.size());
             return ImmutableList.of(new TextNode(prop.enumValues.get(idx)));
@@ -304,7 +313,7 @@ public class ResponseGenerator implements Subscriber {
         Map.Entry<StructDef, List<TypeDef>> lookup = matches.iterator().next();
 
         // Generate objects and cast to JsonNode.
-        return getObject(lookup.getKey(), lookup.getValue()).stream()
+        return getObject(lookup.getKey(), lookup.getValue(), enteredTypes).stream()
                 .map(node -> (JsonNode)node)
                 .collect(Collectors.toList());
     }

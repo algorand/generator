@@ -47,10 +47,14 @@ public class StructDef implements Comparable<StructDef> {
 
     @Override
     public String toString() {
-        return "name: '" + name + "', " +
+        return "{name: '" + name + "', " +
+                "aliasOf: '" + aliasOf + "', " +
                 "doc: '" + doc + "', " +
-                "required: ['" + String.join("', '", requiredProperties) + "'], " +
-                "mutuallyExclusive: ['" + String.join("', '", mutuallyExclusiveProperties) + "']";
+                "properties: " + properties.size() + ", " +
+                "requiredProperties: ['" +
+                String.join("', '", requiredProperties) + "'], " +
+                "mutuallyExclusiveProperties: ['" +
+                String.join("', '", mutuallyExclusiveProperties) + "']}";
     }
 
     @Override
