@@ -211,7 +211,7 @@ public class ResponseGenerator implements Subscriber {
         List<ObjectNode> nodes = new ArrayList<>();
         nodes.add(mapper.createObjectNode());
         for (TypeDef prop : properties) {
-            // Skip properties in the exclusion list
+            // Skip properties in the exclusion list or that have already been visited.
             if (!exclusions.contains(prop.propertyName) &&
                     (enteredTypes.getOrDefault(prop.rawTypeName, 0) <= 1)) {
                 List<JsonNode> propertyNodes = new ArrayList<>();
