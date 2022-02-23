@@ -150,19 +150,31 @@ public class ResponseGenerator implements Subscriber {
 
             // Write the files.
             for (ObjectNode node : nodes) {
-                String extension = "";
-                String data = "";
-                if (export.query.contentType != null && export.query.contentType.stream().anyMatch(s -> s.contains("msgp"))) {
-                    extension = ".base64";
-                    data = Encoder.encodeToBase64(Encoder.encodeToMsgPack(node));
-                } else {
-                    extension = ".json";
-                    data = Encoder.encodeToJson(node);
-                }
-                Path output = new File(args.outputDirectory, prefix + (num++) + extension).toPath();
+                for (String contentType : export.query.contentType) {
+                    String extension = "";
+                    String data = "";
+                    if (contentType.equals("application/msgpack")) {
+                        extension = ".base64";
+                        data = Encoder.encodeToBase64(Encoder.encodeToMsgPack(node));
+                    } else if (contentType.equals("application/json")) {
+                        extension = ".json";
+                        data = Encoder.encodeToJson(node);
+                    }
 
-                logger.info("Exporting example of %s to: %s", export.struct.name, output.getFileName());
-                Files.write(output, data.getBytes());
+                    if (extension == "") {
+                        logger.info(
+                            "Unrecognized content type \"" + contentType +
+                            "\"; skipping");
+                    } else {
+                        Path output = new File(
+                            args.outputDirectory, prefix + (num++) + extension).toPath();
+
+                        logger.info(
+                            "Exporting example of " + export.struct.name + " to \"" +
+                            output.getFileName() + "\"");
+                        Files.write(output, data.getBytes());
+                    }
+                }
             }
         } catch (JsonProcessingException e) {
             System.err.println("An exception occurred parsing JSON object for: " + export.struct.name + "\n\n\n\n");
