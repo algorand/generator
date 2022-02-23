@@ -345,7 +345,8 @@ public class ResponseGenerator implements Subscriber {
                         // Lookup the real object to generate the response file.
                         List<Map.Entry<StructDef, List<TypeDef>>> entries = findEntry(aliasOf, true);
                         if (entries.size() != 1) {
-                            logger.error("Failed to find single alias for '%s'.", aliasOf);
+                            logger.error(
+                                "Failed to find single alias for \"" + aliasOf + "\".");
                             return;
                         }
                         entry.setValue(entries.get(0).getValue());
@@ -363,7 +364,7 @@ public class ResponseGenerator implements Subscriber {
                         try {
                             export(entry);
                         } catch (Exception e) {
-                            logger.error("Unable to generate: %s", entry.struct);
+                            logger.error("Unable to generate: " + entry.struct);
                             e.printStackTrace();
                         }
                     }
@@ -435,7 +436,7 @@ public class ResponseGenerator implements Subscriber {
         if (event == Publisher.Events.NEW_PROPERTY) {
             activeList.add(type);
         } else {
-            logger.info("unhandled event: %s", event);
+            logger.info("unhandled event: " + event);
         }
     }
 
@@ -447,7 +448,7 @@ public class ResponseGenerator implements Subscriber {
         } else if (event == Publisher.Events.REGISTER_RETURN_TYPE){
             responses.put(sDef, activeList);
         } else {
-            logger.info("unhandled event: %s", event);
+            logger.info("unhandled event: " + event);
         }
     }
 
@@ -459,7 +460,7 @@ public class ResponseGenerator implements Subscriber {
         if (event == Publisher.Events.NEW_QUERY) {
             this.queries.add(query);
         }
-        logger.info("Unhandled event (event, []notes) - %s", query.toString());
+        logger.info("Unhandled event (event, []notes) - " + query.toString());
     }
 
     /**
@@ -467,7 +468,7 @@ public class ResponseGenerator implements Subscriber {
      */
     @Override
     public void onEvent(Publisher.Events event) {
-        logger.info("unhandled event: %s", event);
+        logger.info("unhandled event: " + event);
     }
 
     /*
