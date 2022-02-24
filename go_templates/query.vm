@@ -56,7 +56,11 @@ type ${paramsType} struct {
 #if ( "#queryParamTypeName($qp)" != "" )
 
   // $str.formatDoc("#queryParamTypeName($qp) ${str.uncapitalize($qp.doc)}", "  // ")
-  #queryParamTypeName($qp) #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
+  #if ( $qp.arrayType == "string" )
+    #queryParamTypeName($qp) []string `url:"$qp.propertyName,omitempty,comma"`
+  #else
+    #queryParamTypeName($qp) #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
+  #end
 #end
 #end
 }
@@ -104,7 +108,7 @@ func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) time.Time
 func (s *$queryType) #queryParamTypeName($qp)(#queryParamTypeName($qp) #oapiToGo($qp, true)) *$queryType {
 #if( $qp.algorandFormat == "base64" )
   s.p.#queryParamTypeName($qp) = base64.StdEncoding.EncodeToString(#queryParamTypeName($qp))
-#elseif ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" )
+#elseif ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" || $qp.arrayType )
   s.p.#queryParamTypeName($qp) = #queryParamTypeName($qp)
 #else
 UNHANDLED TYPE
