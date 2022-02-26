@@ -13,6 +13,7 @@ public class QueryMapperGenerator extends OpenApiParser {
 
     JsonNode indexer;
     JsonNode algod;
+    @SuppressWarnings("deprecation")
     public QueryMapperGenerator(JsonNode indexerRoot, JsonNode algodRoot) {
         super(indexerRoot);
         this.indexer = indexerRoot;
@@ -125,7 +126,9 @@ public class QueryMapperGenerator extends OpenApiParser {
             String javaSetParamName = Tools.getCamelCase(parameter.getKey(), false);
 
             JsonNode typeNode = parameter.getValue().get("type") != null ? parameter.getValue() : parameter.getValue().get("schema");
-
+            if (typeNode.get("$ref") != null) {
+                typeNode = this.getFromRef(typeNode.get("$ref").asText());            
+            }
             String typeName = typeNode.get("type").asText();
             Iterator<JsonNode> enumVals = parameter.getValue().get("enum") == null ? null : 
                 parameter.getValue().get("enum").elements();

@@ -1,14 +1,6 @@
 package com.algorand.sdkutils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-
-//import com.algorand.algosdk.v2.client.common.Client;
-//import com.algorand.algosdk.v2.client.common.IndexerClient;
 import com.algorand.sdkutils.generators.TestGenerator;
-import com.algorand.sdkutils.generators.Utils;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class RunIndexerTests extends TestGenerator{

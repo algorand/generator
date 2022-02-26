@@ -183,6 +183,7 @@ public class TestGenerator extends OpenApiParser {
 	}
      */
 
+    @SuppressWarnings("deprecation")
     public TestGenerator (JsonNode root) {
         super(root);
     }

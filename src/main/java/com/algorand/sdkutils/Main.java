@@ -135,6 +135,7 @@ public class Main {
     /**
      * Route command to java generator.
      */
+    @SuppressWarnings("deprecation")
     private static void javaGenerator(JavaGeneratorArgs args, JCommander command) {
         try {
             Generate.generate(

@@ -38,7 +38,6 @@ public class ResponseGenerator implements Subscriber {
         }
 
         Publisher pub = new Publisher();
-        ResponseGenerator subscriber = new ResponseGenerator(args, pub);
         OpenApiParser parser = new OpenApiParser(root, pub);
         parser.parse();
     }
@@ -124,6 +123,7 @@ public class ResponseGenerator implements Subscriber {
                 InputStream fis = getResourceAsStream (loader, path + "/" + filename);
                 byte[] data = new byte[fis.available()];
                 fis.read(data);
+                @SuppressWarnings("unchecked")
                 Map<String,Object> stx = Encoder.decodeFromMsgPack(data, Map.class);
                 JsonNode node = mapper.valueToTree(stx);
                 this.signedTransactions.add(node);
@@ -136,7 +136,7 @@ public class ResponseGenerator implements Subscriber {
     private void export(ExportType export) {
         // Export the object.
         List<ObjectNode> nodes =
-            getObject(export.struct, export.properties, new HashMap());
+            getObject(export.struct, export.properties, new HashMap<String, Integer>());
 
         try (Stream<Path> existing = Files.list(args.outputDirectory.toPath())){
             List<Path> existingFiles = existing.collect(Collectors.toList());
@@ -209,7 +209,7 @@ public class ResponseGenerator implements Subscriber {
 
         // Each exclusion combination
         for (String field : def.mutuallyExclusiveProperties) {
-            List exclusions = def.mutuallyExclusiveProperties.stream()
+            List<String> exclusions = def.mutuallyExclusiveProperties.stream()
                     .filter(f -> !f.equals(field))
                     .collect(Collectors.toList());
             nodes.addAll(getObjectWithExclusions(

@@ -4,6 +4,7 @@ import java.io.File;
 
 public class RunIndexerGenerator {
 
+    @SuppressWarnings("deprecation")
     public static void main (String args[]) throws Exception {
         String specFilePath = "../../indexer/api/indexer.oas2.json";
         if (args.length == 1) {
