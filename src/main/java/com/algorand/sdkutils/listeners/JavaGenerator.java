@@ -479,7 +479,7 @@ final class JavaQueryWriter {
             Tools.addImport(this.imports, this.javaGen.modelPackage + "." + query.returnType);
         }
 
-        this.javaGen.generatedPathsEntries.append(Tools.formatComment(this.discAndPath, this.TAB, true));
+        this.javaGen.generatedPathsEntries.append(Tools.formatComment(this.discAndPath, JavaQueryWriter.TAB, true));
         this.javaGen.generatedPathsEntries.append("    public " + this.className + " " + query.name + "(");
     }
 

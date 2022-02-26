@@ -74,7 +74,14 @@ public class OpenApiParser {
     static TypeDef getEnum(JsonNode prop, String propName, String goPropertyName, String openApiType, String openApiArrayType, String openApiFormat, String openApiAlgorandFormat, String openApiGoName) {
         JsonNode enumNode = prop.get("enum");
         if (enumNode == null) {
-            throw new RuntimeException("Cannot find enum info in node: " + prop.toString());
+            // case of array of enum
+            JsonNode itms = prop.get("items");
+            if (itms != null) {
+                enumNode = itms.get("enum");
+            }
+            if (enumNode == null) {
+                throw new RuntimeException("Cannot find enum info in node: " + prop.toString());
+            }
         }
         String enumClassName = Tools.getCamelCase(propName, true);
 
@@ -204,7 +211,6 @@ public class OpenApiParser {
                 oldArrayType += ",getterSetter";
             }
             String resolvedArrayType = typeName.openApiType;
-            String resolvedArrayFormat = typeName.openApiFormat;
             String resolvedAlgoFormat = typeName.openApiAlgorandFormat;
             if (StringUtils.isNotEmpty(typeName.openApiRefType)) {
                 resolvedArrayType = typeName.openApiRefType;
@@ -212,9 +218,16 @@ public class OpenApiParser {
                 //resolvedArrayFormat = ???
                 //resolvedAlgoFormat = typeName.openApiRefType;
             }
+            List<String> enumValues = null;
+            if (typeName.javaTypeName.startsWith("Enums")) {
+               oldArrayType += ",enum";
+               String enumClassName = typeName.javaTypeName.substring(typeName.javaTypeName.indexOf(".")+1);
+               TypeDef enumType = getEnum(prop, enumClassName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+               enumValues = enumType.enumValues;
+            }
             return new TypeDef("List<" + typeName.javaTypeName + ">", typeName.rawTypeName,
                     oldArrayType, propName, goName, desc, required,
-                    refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName);
+                    refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName, enumValues);
         default:
             return new TypeDef(openApiType, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         }
@@ -407,7 +420,6 @@ public class OpenApiParser {
             // Populate generator structures for the in path parameters
             if (inPath(prop.getValue())) {
                 if (propType.isOfType("enum")) {
-                    propType.isOfType("enum");
                     throw new RuntimeException("Enum in paths is not supported! " + propName);
                 }
                 publisher.publish(Events.PATH_PARAMETER, propType);
