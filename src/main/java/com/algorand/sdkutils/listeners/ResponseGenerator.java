@@ -38,6 +38,9 @@ public class ResponseGenerator implements Subscriber {
         }
 
         Publisher pub = new Publisher();
+        ResponseGenerator subscriber = new ResponseGenerator(args);
+        pub.subscribeAll(subscriber);
+
         OpenApiParser parser = new OpenApiParser(root, pub);
         parser.parse();
     }
