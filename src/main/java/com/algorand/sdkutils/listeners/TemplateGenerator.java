@@ -39,6 +39,9 @@ public class TemplateGenerator implements Subscriber {
         }
 
         Publisher pub = new Publisher();
+        TemplateGenerator subscriber = new TemplateGenerator(args);
+        pub.subscribeAll(subscriber);
+
         OpenApiParser parser = new OpenApiParser(root, pub);
         parser.parse();
     }
@@ -101,7 +104,7 @@ public class TemplateGenerator implements Subscriber {
     /**
      * Constructor.
      */
-    public TemplateGenerator(TemplateGeneratorArgs args, Publisher publisher) {
+    public TemplateGenerator(TemplateGeneratorArgs args) {
         this.args =args;
 
         // Initialize property file if provided.
@@ -114,8 +117,6 @@ public class TemplateGenerator implements Subscriber {
                 }
             }
         }
-
-        publisher.subscribeAll(this);
     }
 
     /**

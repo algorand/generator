@@ -43,7 +43,6 @@ public class OpenApiParser {
      * Parse the file and drive the publisher.
      */
     public void parse() throws Exception {
-        // TODO: Verify compatible OpenAPI version.
 
         logger.debug("Parsing definitions.");
         this.generateAlgodIndexerObjects(root);

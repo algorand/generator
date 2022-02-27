@@ -30,10 +30,6 @@ public class Main {
                 .build();
         root.parse(argv);
 
-        if (common.verbose) {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-
         // Route to command handler.
         String commandName = root.getParsedCommand();
         if (commandName == null) commandName = "";
@@ -90,6 +86,10 @@ public class Main {
             if (this.help) {
                 command.usage();
                 System.exit(0);
+            }
+            
+            if (this.verbose) {
+                Configurator.setRootLevel(Level.DEBUG);
             }
 
             if (this.specfile == null) {

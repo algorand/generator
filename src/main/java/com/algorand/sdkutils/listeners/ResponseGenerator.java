@@ -38,6 +38,9 @@ public class ResponseGenerator implements Subscriber {
         }
 
         Publisher pub = new Publisher();
+        ResponseGenerator subscriber = new ResponseGenerator(args);
+        pub.subscribeAll(subscriber);
+
         OpenApiParser parser = new OpenApiParser(root, pub);
         parser.parse();
     }
@@ -106,9 +109,8 @@ public class ResponseGenerator implements Subscriber {
         return in == null ? getClass().getResourceAsStream(resource) : in;
     }
 
-    public ResponseGenerator(ResponseGeneratorArgs args, Publisher publisher) {
+    public ResponseGenerator(ResponseGeneratorArgs args) {
         this.args = args;
-        publisher.subscribeAll(this);
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String path = "stxn";
 
