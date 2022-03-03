@@ -93,12 +93,12 @@ public class ResponseGenerator implements Subscriber {
     private List<JsonNode> signedTransactions = new ArrayList<>();
 
     private static class ExportType {
-        final QueryDef query;
+        final List<String> contentType;
         final StructDef struct;
         final List<TypeDef> properties;
 
-        public ExportType(QueryDef query, StructDef struct, List<TypeDef> properties) {
-            this.query = query;
+        public ExportType(List<String> contentType, StructDef struct, List<TypeDef> properties) {
+            this.contentType = contentType;
             this.struct = struct;
             this.properties = properties;
         }
@@ -152,7 +152,7 @@ public class ResponseGenerator implements Subscriber {
 
             // Write the files.
             for (ObjectNode node : nodes) {
-                for (String contentType : export.query.contentType) {
+                for (String contentType : export.contentType) {
                     String extension = "";
                     String data = "";
                     if (contentType.equals("application/msgpack")) {
@@ -371,7 +371,7 @@ public class ResponseGenerator implements Subscriber {
                         }
                     }
                 });
-        /*
+       
         findEntry(args.filter, false)
                 .forEach(entry -> {
                     // list mode
@@ -381,14 +381,16 @@ public class ResponseGenerator implements Subscriber {
                     // generate mode
                     else {
                         try {
-                            export(entry.getKey(), entry.getValue());
+                            ArrayList<String> contentType = new ArrayList<String>();
+                            contentType.add("application/json");
+                            ExportType et = new ExportType(contentType, entry.getKey(), entry.getValue());
+                            export(et);
                         } catch (Exception e) {
                             logger.error("Unable to generate: %s", entry.getKey());
                             e.printStackTrace();
                         }
                     }
                 });
-         */
     }
 
     /**
@@ -428,7 +430,7 @@ public class ResponseGenerator implements Subscriber {
                     return true;
                 })
                 .flatMap(q -> findEntry(q.returnType, true).stream()
-                        .map(entry -> new ExportType(q, entry.getKey(), entry.getValue()))
+                        .map(entry -> new ExportType(q.getContentType(), entry.getKey(), entry.getValue()))
                 )
                 .collect(Collectors.toList());
     }

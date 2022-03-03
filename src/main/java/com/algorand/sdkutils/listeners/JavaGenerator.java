@@ -549,7 +549,9 @@ final class JavaQueryWriter {
             builders.append(TAB + "public " + className + " " + setterName +
                     "(" + propType.javaTypeName + " " + propName + ") " + exceptionStm + "{\n");
             String valueOfString = getStringValueOfStatement(propType.javaTypeName, propName);
-
+            if (propType.isOfType("array")) {            
+                valueOfString = valueOfString + ".replaceAll(\"[ \\\\[\\\\]]\", \"\")";
+            }
             if (inBody) {
                 String valueOfByteA = getByteArrayValueOfStatement(propType.javaTypeName, propName);
                 builders.append(TAB + TAB + "addToBody("+ valueOfByteA +");\n");
