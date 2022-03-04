@@ -174,6 +174,7 @@ public class ResponseGenerator implements Subscriber {
                         logger.info(
                             "Exporting example of " + export.struct.name + " to \"" +
                             output.getFileName() + "\"");
+                        data = data+"\n";
                         Files.write(output, data.getBytes());
                     }
                 }
