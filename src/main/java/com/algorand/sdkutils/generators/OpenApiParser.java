@@ -399,6 +399,11 @@ public class OpenApiParser {
     }
     static boolean hasProperties(JsonNode itemNode) {
         if (itemNode.get("properties") == null) {
+            if (itemNode.get("schema") != null) {
+                if (itemNode.get("schema").get("properties") != null) {
+                    return true;
+                }
+            }
             return false;
         }
         return true;

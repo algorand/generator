@@ -290,7 +290,7 @@ public class JavaGenerator implements Subscriber {
             boolean forModel) {
 
         if (typeObj.isOfType("array")) {
-            Tools.addImport(imports, "java.util.ArrayList");
+            if (forModel) Tools.addImport(imports, "java.util.ArrayList");
             Tools.addImport(imports, "java.util.List");
         }
 
@@ -548,9 +548,12 @@ final class JavaQueryWriter {
             String exceptionStm = exception.isEmpty() ? "" : "throws " + exception + " ";
             builders.append(TAB + "public " + className + " " + setterName +
                     "(" + propType.javaTypeName + " " + propName + ") " + exceptionStm + "{\n");
-            String valueOfString = getStringValueOfStatement(propType.javaTypeName, propName);
-            if (propType.isOfType("array")) {            
-                valueOfString = valueOfString + ".replaceAll(\"[ \\\\[\\\\]]\", \"\")";
+            String valueOfString = null;
+            if (propType.isOfType("array")) {
+                valueOfString = "StringUtils.join(" + propName + ", \",\")";
+                Tools.addImport(imports, "org.apache.commons.lang3.StringUtils");
+            } else {
+                valueOfString = getStringValueOfStatement(propType.javaTypeName, propName);
             }
             if (inBody) {
                 String valueOfByteA = getByteArrayValueOfStatement(propType.javaTypeName, propName);
