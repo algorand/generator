@@ -146,9 +146,19 @@ public class ResponseGenerator implements Subscriber {
             String prefix = args.prefix + "_" + export.struct.name + "_";
 
             // See how many files are already there to initialize the count.
-            long num = existingFiles.stream()
-                    .filter(p -> p.getFileName().toString().startsWith(prefix))
-                    .count();
+            long num = 0;
+            for (Path p : existingFiles) {
+                String pStr = p.toString();
+                if (!pStr.contains(prefix)) {
+                    continue;
+                }
+                int si = pStr.lastIndexOf("_");
+                int ei = pStr.indexOf(".");
+                if (si < 0 || ei < 0) continue;
+                String numSuffix = pStr.substring(si+1, ei);
+                long lastNum = Long.parseLong(numSuffix);
+                num = lastNum + 1;
+            }
 
             // Write the files.
             for (ObjectNode node : nodes) {
