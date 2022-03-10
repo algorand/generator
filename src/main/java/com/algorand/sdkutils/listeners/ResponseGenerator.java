@@ -167,7 +167,7 @@ public class ResponseGenerator implements Subscriber {
                             "\"; skipping");
                     } else {
                         Path output = new File(
-                            args.outputDirectory, prefix + (num++) + extension).toPath();
+                            args.outputDirectory, prefix + num + extension).toPath();
 
                         logger.info(
                             "Exporting example of " + export.struct.name + " to \"" +
@@ -175,6 +175,7 @@ public class ResponseGenerator implements Subscriber {
                         Files.write(output, data.getBytes());
                     }
                 }
+                ++num;
             }
         } catch (JsonProcessingException e) {
             System.err.println("An exception occurred parsing JSON object for: " + export.struct.name + "\n\n\n\n");
