@@ -366,7 +366,9 @@ public class ResponseGenerator implements Subscriber {
                         entry.setValue(entries.get(0).getValue());
                     }
                 });
-
+        // fiterQueries returns the return type element of the queries, which are the elements in "paths" of oas2.
+        // However, each path has 1 designated return type. Consequently, responses corresponding to non-primary
+        // return types will not be exported from filterQueries.
         filterQueries(args.filter, false)
                 .forEach(entry -> {
                     // list mode
@@ -384,6 +386,11 @@ public class ResponseGenerator implements Subscriber {
                     }
                 });
        
+        // To export responses for those types which were missed in the filterQueries segement above,
+        // this segment uses findEntry to collect all elements in responses and models, and exports
+        // responses for them. This creates redundant outputs.
+        // TODO: reconcile these two code segments, either by keeping track of the porcessed types
+        // so they will not be exported with an incremented file name, or get rid of the segment above.
         findEntry(args.filter, false)
                 .forEach(entry -> {
                     // list mode

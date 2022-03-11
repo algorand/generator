@@ -556,6 +556,11 @@ public class OpenApiParser {
                     } else {
                         rSchema = rtype.getValue().get("schema");
                     }
+                    if (rSchema.get("properties") == null) {
+                        // cannot make a class without properties
+                        // this type is currently not supported
+                        continue;
+                    }
                     if (rSchema.get("$ref") != null ) {
                         // It refers to a defined class, create an alias
                         String realType = getTypeNameFromRef(rSchema.get("$ref"));
