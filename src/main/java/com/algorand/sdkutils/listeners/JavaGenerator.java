@@ -492,7 +492,9 @@ final class JavaQueryWriter {
 
         // Do not expose format property
         if (propType.javaTypeName.equals("Enums.Format")) {
-            if (!className.equals("AccountInformation")) {
+            if (!className.equals("AccountInformation") 
+                    && !className.equals("AccountApplicationInformation")
+                    && !className.equals("AccountAssetInformation")) {
                 // Don't set format to msgpack for AccountInformation
                 addFormatMsgpack = true;
             }
