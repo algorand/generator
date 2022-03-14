@@ -64,8 +64,8 @@ public class DoGenerate {
 
         @Parameter(required = false,
                 names = {"--filter"},
-                description = "classlist is a list of class names. If provided, only thses classes" +
-                "will be processed. Otherwise, all the classes are processed.Path where generated paths files will be placed.")
+                description = "classlist is a list of class names. If provided, thses classes" +
+                "will not be processed.")
         public List<String> filterList = new ArrayList<String>();
 
         public void validate(JCommander command) {
