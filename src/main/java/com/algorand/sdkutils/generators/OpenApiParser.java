@@ -43,7 +43,6 @@ public class OpenApiParser {
      * Parse the file and drive the publisher.
      */
     public void parse() throws Exception {
-        // TODO: Verify compatible OpenAPI version.
 
         logger.debug("Parsing definitions.");
         this.generateAlgodIndexerObjects(root);
@@ -74,7 +73,14 @@ public class OpenApiParser {
     static TypeDef getEnum(JsonNode prop, String propName, String goPropertyName, String openApiType, String openApiArrayType, String openApiFormat, String openApiAlgorandFormat, String openApiGoName) {
         JsonNode enumNode = prop.get("enum");
         if (enumNode == null) {
-            throw new RuntimeException("Cannot find enum info in node: " + prop.toString());
+            // case of array of enum
+            JsonNode itms = prop.get("items");
+            if (itms != null) {
+                enumNode = itms.get("enum");
+            }
+            if (enumNode == null) {
+                throw new RuntimeException("Cannot find enum info in node: " + prop.toString());
+            }
         }
         String enumClassName = Tools.getCamelCase(propName, true);
 
@@ -204,7 +210,6 @@ public class OpenApiParser {
                 oldArrayType += ",getterSetter";
             }
             String resolvedArrayType = typeName.openApiType;
-            String resolvedArrayFormat = typeName.openApiFormat;
             String resolvedAlgoFormat = typeName.openApiAlgorandFormat;
             if (StringUtils.isNotEmpty(typeName.openApiRefType)) {
                 resolvedArrayType = typeName.openApiRefType;
@@ -212,9 +217,16 @@ public class OpenApiParser {
                 //resolvedArrayFormat = ???
                 //resolvedAlgoFormat = typeName.openApiRefType;
             }
+            List<String> enumValues = null;
+            if (typeName.javaTypeName.startsWith("Enums")) {
+               oldArrayType += ",enum";
+               String enumClassName = typeName.javaTypeName.substring(typeName.javaTypeName.indexOf(".")+1);
+               TypeDef enumType = getEnum(prop, enumClassName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+               enumValues = enumType.enumValues;
+            }
             return new TypeDef("List<" + typeName.javaTypeName + ">", typeName.rawTypeName,
                     oldArrayType, propName, goName, desc, required,
-                    refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName);
+                    refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName, enumValues);
         default:
             return new TypeDef(openApiType, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
         }
@@ -387,6 +399,11 @@ public class OpenApiParser {
     }
     static boolean hasProperties(JsonNode itemNode) {
         if (itemNode.get("properties") == null) {
+            if (itemNode.get("schema") != null) {
+                if (itemNode.get("schema").get("properties") != null) {
+                    return true;
+                }
+            }
             return false;
         }
         return true;
@@ -407,7 +424,6 @@ public class OpenApiParser {
             // Populate generator structures for the in path parameters
             if (inPath(prop.getValue())) {
                 if (propType.isOfType("enum")) {
-                    propType.isOfType("enum");
                     throw new RuntimeException("Enum in paths is not supported! " + propName);
                 }
                 publisher.publish(Events.PATH_PARAMETER, propType);
@@ -539,6 +555,11 @@ public class OpenApiParser {
                         rSchema = rtype.getValue().get("content").get("application/json").get("schema");
                     } else {
                         rSchema = rtype.getValue().get("schema");
+                    }
+                    if (rSchema.get("properties") == null) {
+                        // cannot make a class without properties
+                        // this type is currently not supported
+                        continue;
                     }
                     if (rSchema.get("$ref") != null ) {
                         // It refers to a defined class, create an alias

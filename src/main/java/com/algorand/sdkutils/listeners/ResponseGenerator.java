@@ -38,7 +38,9 @@ public class ResponseGenerator implements Subscriber {
         }
 
         Publisher pub = new Publisher();
-        ResponseGenerator subscriber = new ResponseGenerator(args, pub);
+        ResponseGenerator subscriber = new ResponseGenerator(args);
+        pub.subscribeAll(subscriber);
+
         OpenApiParser parser = new OpenApiParser(root, pub);
         parser.parse();
     }
@@ -91,12 +93,12 @@ public class ResponseGenerator implements Subscriber {
     private List<JsonNode> signedTransactions = new ArrayList<>();
 
     private static class ExportType {
-        final QueryDef query;
+        final List<String> contentType;
         final StructDef struct;
         final List<TypeDef> properties;
 
-        public ExportType(QueryDef query, StructDef struct, List<TypeDef> properties) {
-            this.query = query;
+        public ExportType(List<String> contentType, StructDef struct, List<TypeDef> properties) {
+            this.contentType = contentType;
             this.struct = struct;
             this.properties = properties;
         }
@@ -107,9 +109,8 @@ public class ResponseGenerator implements Subscriber {
         return in == null ? getClass().getResourceAsStream(resource) : in;
     }
 
-    public ResponseGenerator(ResponseGeneratorArgs args, Publisher publisher) {
+    public ResponseGenerator(ResponseGeneratorArgs args) {
         this.args = args;
-        publisher.subscribeAll(this);
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String path = "stxn";
 
@@ -124,6 +125,7 @@ public class ResponseGenerator implements Subscriber {
                 InputStream fis = getResourceAsStream (loader, path + "/" + filename);
                 byte[] data = new byte[fis.available()];
                 fis.read(data);
+                @SuppressWarnings("unchecked")
                 Map<String,Object> stx = Encoder.decodeFromMsgPack(data, Map.class);
                 JsonNode node = mapper.valueToTree(stx);
                 this.signedTransactions.add(node);
@@ -136,7 +138,7 @@ public class ResponseGenerator implements Subscriber {
     private void export(ExportType export) {
         // Export the object.
         List<ObjectNode> nodes =
-            getObject(export.struct, export.properties, new HashMap());
+            getObject(export.struct, export.properties, new HashMap<String, Integer>());
 
         try (Stream<Path> existing = Files.list(args.outputDirectory.toPath())){
             List<Path> existingFiles = existing.collect(Collectors.toList());
@@ -144,13 +146,23 @@ public class ResponseGenerator implements Subscriber {
             String prefix = args.prefix + "_" + export.struct.name + "_";
 
             // See how many files are already there to initialize the count.
-            long num = existingFiles.stream()
-                    .filter(p -> p.getFileName().toString().startsWith(prefix))
-                    .count();
+            long num = 0;
+            for (Path p : existingFiles) {
+                String pStr = p.toString();
+                if (!pStr.contains(prefix)) {
+                    continue;
+                }
+                int si = pStr.lastIndexOf("_");
+                int ei = pStr.indexOf(".");
+                if (si < 0 || ei < 0) continue;
+                String numSuffix = pStr.substring(si+1, ei);
+                long lastNum = Long.parseLong(numSuffix);
+                num = lastNum + 1;
+            }
 
             // Write the files.
             for (ObjectNode node : nodes) {
-                for (String contentType : export.query.contentType) {
+                for (String contentType : export.contentType) {
                     String extension = "";
                     String data = "";
                     if (contentType.equals("application/msgpack")) {
@@ -172,6 +184,7 @@ public class ResponseGenerator implements Subscriber {
                         logger.info(
                             "Exporting example of " + export.struct.name + " to \"" +
                             output.getFileName() + "\"");
+                        data = data+"\n";
                         Files.write(output, data.getBytes());
                     }
                 }
@@ -210,7 +223,7 @@ public class ResponseGenerator implements Subscriber {
 
         // Each exclusion combination
         for (String field : def.mutuallyExclusiveProperties) {
-            List exclusions = def.mutuallyExclusiveProperties.stream()
+            List<String> exclusions = def.mutuallyExclusiveProperties.stream()
                     .filter(f -> !f.equals(field))
                     .collect(Collectors.toList());
             nodes.addAll(getObjectWithExclusions(
@@ -353,7 +366,9 @@ public class ResponseGenerator implements Subscriber {
                         entry.setValue(entries.get(0).getValue());
                     }
                 });
-
+        // fiterQueries returns the return type element of the queries, which are the elements in "paths" of oas2.
+        // However, each path has 1 designated return type. Consequently, responses corresponding to non-primary
+        // return types will not be exported from filterQueries.
         filterQueries(args.filter, false)
                 .forEach(entry -> {
                     // list mode
@@ -370,7 +385,12 @@ public class ResponseGenerator implements Subscriber {
                         }
                     }
                 });
-        /*
+       
+        // To export responses for those types which were missed in the filterQueries segement above,
+        // this segment uses findEntry to collect all elements in responses and models, and exports
+        // responses for them. This creates redundant outputs.
+        // TODO: reconcile these two code segments, either by keeping track of the porcessed types
+        // so they will not be exported with an incremented file name, or get rid of the segment above.
         findEntry(args.filter, false)
                 .forEach(entry -> {
                     // list mode
@@ -380,14 +400,16 @@ public class ResponseGenerator implements Subscriber {
                     // generate mode
                     else {
                         try {
-                            export(entry.getKey(), entry.getValue());
+                            ArrayList<String> contentType = new ArrayList<String>();
+                            contentType.add("application/json");
+                            ExportType et = new ExportType(contentType, entry.getKey(), entry.getValue());
+                            export(et);
                         } catch (Exception e) {
                             logger.error("Unable to generate: %s", entry.getKey());
                             e.printStackTrace();
                         }
                     }
                 });
-         */
     }
 
     /**
@@ -427,7 +449,7 @@ public class ResponseGenerator implements Subscriber {
                     return true;
                 })
                 .flatMap(q -> findEntry(q.returnType, true).stream()
-                        .map(entry -> new ExportType(q, entry.getKey(), entry.getValue()))
+                        .map(entry -> new ExportType(q.getContentType(), entry.getKey(), entry.getValue()))
                 )
                 .collect(Collectors.toList());
     }

@@ -137,6 +137,18 @@ public class Tools {
             for (String imp : java) {
                 sb.append("import " + imp + ";\n");
             }
+            if (imports.get("org") != null) {
+                sb.append("\n");
+            } else if (imports.get("com") != null) {
+                sb.append("\n");
+            }
+        }
+
+        Set<String> org = imports.get("org");
+        if (org != null) {
+            for (String imp : org) {
+                sb.append("import " + imp + ";\n");
+            }
             if (imports.get("com") != null) {
                 sb.append("\n");
             }

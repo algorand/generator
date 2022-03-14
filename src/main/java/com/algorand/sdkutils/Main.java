@@ -30,10 +30,6 @@ public class Main {
                 .build();
         root.parse(argv);
 
-        if (common.verbose) {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-
         // Route to command handler.
         String commandName = root.getParsedCommand();
         if (commandName == null) commandName = "";
@@ -91,6 +87,10 @@ public class Main {
                 command.usage();
                 System.exit(0);
             }
+            
+            if (this.verbose) {
+                Configurator.setRootLevel(Level.DEBUG);
+            }
 
             if (this.specfile == null) {
                 throw new RuntimeException("Specfile must be provided with -s or --specfile");
@@ -135,6 +135,7 @@ public class Main {
     /**
      * Route command to java generator.
      */
+    @SuppressWarnings("deprecation")
     private static void javaGenerator(JavaGeneratorArgs args, JCommander command) {
         try {
             Generate.generate(

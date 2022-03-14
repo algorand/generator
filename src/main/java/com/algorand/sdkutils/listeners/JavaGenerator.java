@@ -290,7 +290,7 @@ public class JavaGenerator implements Subscriber {
             boolean forModel) {
 
         if (typeObj.isOfType("array")) {
-            Tools.addImport(imports, "java.util.ArrayList");
+            if (forModel) Tools.addImport(imports, "java.util.ArrayList");
             Tools.addImport(imports, "java.util.List");
         }
 
@@ -479,7 +479,7 @@ final class JavaQueryWriter {
             Tools.addImport(this.imports, this.javaGen.modelPackage + "." + query.returnType);
         }
 
-        this.javaGen.generatedPathsEntries.append(Tools.formatComment(this.discAndPath, this.TAB, true));
+        this.javaGen.generatedPathsEntries.append(Tools.formatComment(this.discAndPath, JavaQueryWriter.TAB, true));
         this.javaGen.generatedPathsEntries.append("    public " + this.className + " " + query.name + "(");
     }
 
@@ -492,7 +492,9 @@ final class JavaQueryWriter {
 
         // Do not expose format property
         if (propType.javaTypeName.equals("Enums.Format")) {
-            if (!className.equals("AccountInformation")) {
+            if (!className.equals("AccountInformation") 
+                    && !className.equals("AccountApplicationInformation")
+                    && !className.equals("AccountAssetInformation")) {
                 // Don't set format to msgpack for AccountInformation
                 addFormatMsgpack = true;
             }
@@ -548,8 +550,13 @@ final class JavaQueryWriter {
             String exceptionStm = exception.isEmpty() ? "" : "throws " + exception + " ";
             builders.append(TAB + "public " + className + " " + setterName +
                     "(" + propType.javaTypeName + " " + propName + ") " + exceptionStm + "{\n");
-            String valueOfString = getStringValueOfStatement(propType.javaTypeName, propName);
-
+            String valueOfString = null;
+            if (propType.isOfType("array")) {
+                valueOfString = "StringUtils.join(" + propName + ", \",\")";
+                Tools.addImport(imports, "org.apache.commons.lang3.StringUtils");
+            } else {
+                valueOfString = getStringValueOfStatement(propType.javaTypeName, propName);
+            }
             if (inBody) {
                 String valueOfByteA = getByteArrayValueOfStatement(propType.javaTypeName, propName);
                 builders.append(TAB + TAB + "addToBody("+ valueOfByteA +");\n");

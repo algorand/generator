@@ -77,8 +77,6 @@ public class Generate {
 
         // Generate the algod methods
         File imports = Files.createTempFile("imports_file", "txt").toFile();
-        File paths = Files.createTempFile("pathss_file", "txt").toFile();
-
         System.out.println("Generating " + pathsPackage + " to " + pathsPath);
         g.generateQueryMethods();
 

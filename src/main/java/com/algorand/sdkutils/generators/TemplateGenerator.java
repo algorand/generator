@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class TemplateGenerator extends OpenApiParser {
 
+    @SuppressWarnings("deprecation")
     public TemplateGenerator(JsonNode root) {
         super(root);
     }
@@ -52,6 +53,10 @@ public class TemplateGenerator extends OpenApiParser {
                 bw.append(parameter.getKey());
 
                 JsonNode typeNode = parameter.getValue().get("type") != null ? parameter.getValue() : parameter.getValue().get("schema");
+                if (typeNode.get("$ref") != null) {
+                    typeNode = this.getFromRef(typeNode.get("$ref").asText());            
+                }
+                
                 bw.append("(" + typeNode.get("type").asText() + ")");
                 if (isRequired(parameter.getValue())) {
                     bw.append("[R]");

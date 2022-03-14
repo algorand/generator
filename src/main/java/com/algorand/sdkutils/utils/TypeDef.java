@@ -1,9 +1,7 @@
 package com.algorand.sdkutils.utils;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * TypeDef hold together information about a type
@@ -49,7 +47,50 @@ public class TypeDef {
         this.openApiFormat = openApiFormat;
         this.openApiAlgorandFormat = openApiAlgorandFormat;
         this.openApiAlgorandGoFormat = openApiAlgorandGoFormat;
-        this.enumValues = null;
+        this.required = required;
+    }    
+    /**
+     * @param javaTypeName is the generated code type: e.g. List<abc>, or MyEnumClassName
+     * @param rawTypeName is the type name from the spec file
+     * @param type is a loosely defined tag used by generator e.g. enum, array, etc.
+     * @param propertyName is the class/struct member name
+     * @param goPropertyName, is when provided with x-go-name
+     * @param doc is the comments associated with the parameter
+     * @param required indicates if the field is a required field
+     * @param enumValues is passed if the type is an array of enums
+     */
+    public TypeDef(
+            // TODO: Remove fields from here (requires refactoring all generators which use them)
+            String javaTypeName,
+            String rawTypeName,
+            String type,
+            // TODO: Until here
+            String propertyName,
+            // TODO: Remove this one too
+            String goPropertyName,
+            String doc,
+            boolean required,
+            // TODO: After removing the above, remove openApi prefix from these.
+            String openApiRefType,
+            String openApiType,
+            String openApiArrayType,
+            String openApiFormat,
+            String openApiAlgorandFormat,
+            String openApiAlgorandGoFormat,
+            List<String> enumValues) {
+        this.javaTypeName = javaTypeName;
+        this.rawTypeName = rawTypeName;
+        this.type = type;
+        this.propertyName = propertyName;
+        this.goPropertyName = goPropertyName;
+        this.doc = doc;
+        this.openApiRefType = openApiRefType;
+        this.openApiType = openApiType;
+        this.openApiArrayType = openApiArrayType;
+        this.openApiFormat = openApiFormat;
+        this.openApiAlgorandFormat = openApiAlgorandFormat;
+        this.openApiAlgorandGoFormat = openApiAlgorandGoFormat;
+        this.enumValues = enumValues;
         this.required = required;
     }
     public boolean isOfType(String typeArg) {
