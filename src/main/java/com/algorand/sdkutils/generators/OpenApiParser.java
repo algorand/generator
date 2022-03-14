@@ -35,8 +35,7 @@ public class OpenApiParser {
 
     protected ObjectMapper mapper = new ObjectMapper();
 
-    // List of classes which will be processed.
-    // If empty, all classes will be processed.
+    // List of classes which will not be processed.
     private HashSet<String> filterList;
 
     /**
@@ -533,7 +532,7 @@ public class OpenApiParser {
                         desc = cls.getValue().get("description").asText();
                     }
                     String className = Tools.getCamelCase(cls.getKey(), true);
-                    if (!filterList.isEmpty() && !filterList.contains(className)) {
+                    if (!filterList.isEmpty() && filterList.contains(className)) {
                         continue;
                     }
                     writeClass(cls.getKey(), cls.getValue(), cls.getValue().get("properties"), desc, Events.NEW_MODEL);
@@ -556,19 +555,19 @@ public class OpenApiParser {
                     } else {
                         rSchema = rtype.getValue().get("schema");
                     }
-                    if (rSchema.get("properties") == null) {
-                        // cannot make a class without properties
-                        // this type is currently not supported
-                        continue;
-                    }
                     if (rSchema.get("$ref") != null ) {
                         // It refers to a defined class, create an alias
                         String realType = getTypeNameFromRef(rSchema.get("$ref"));
                         publisher.publish(Events.REGISTER_RETURN_TYPE, new StructDef(rtype.getKey(), realType));
                         continue;
                     }
+                    if (rSchema.get("properties") == null) {
+                        // cannot make a class without properties
+                        // this type is currently not supported
+                        continue;
+                    }                    
                     String className = Tools.getCamelCase(rtype.getKey(), true);
-                    if (!filterList.isEmpty() && !filterList.contains(className)) {
+                    if (!filterList.isEmpty() && filterList.contains(className)) {
                         continue;
                     }
                     String desc = "";
@@ -596,7 +595,7 @@ public class OpenApiParser {
                     }
                     String className = Tools.getCamelCase(
                             path.getValue().get(path.getValue().fieldNames().next()).get("operationId").asText(), true);
-                    if (!filterList.isEmpty() && !filterList.contains(className)) {
+                    if (!filterList.isEmpty() && filterList.contains(className)) {
                         continue;
                     }
                     writeQueryClass(path.getValue(), path.getKey());
@@ -616,6 +615,11 @@ public class OpenApiParser {
         this.root = root;
         this.publisher = publisher;
         this.filterList = new HashSet<String>();
+        
+        // Default filter list:
+        this.filterList.add("PostParticipationResponse");
+        this.filterList.add("ParticipationKey");
+        this.filterList.add("ParticipationKeysResponse");
     }
 
     public OpenApiParser(JsonNode root, Publisher publisher, HashSet<String> filterList) {
