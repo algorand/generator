@@ -619,6 +619,7 @@ public class OpenApiParser {
         // Default filter list:
         this.filterList.add("PostParticipationResponse");
         this.filterList.add("ParticipationKey");
+        this.filterList.add("ParticipationKeysResponse");
     }
 
     public OpenApiParser(JsonNode root, Publisher publisher, HashSet<String> filterList) {
