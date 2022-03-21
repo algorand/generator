@@ -977,7 +977,6 @@ final class JavaModelWriter {
                 "    public void " + javaName + "(String base64Encoded) {\n" +
                 "        this."+ javaName +" = Encoder.decodeFromBase64(base64Encoded);\n" +
                 "    }\n" +
-                "    @JsonProperty(\""+ propName +"\")\n" +
                 "    public String "+ javaName +"() {\n" +
                 "        return Encoder.encodeToBase64(this."+ javaName +");\n" +
                 "    }\n" +
