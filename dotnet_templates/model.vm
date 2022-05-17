@@ -1,0 +1,63 @@
+namespace Algorand.Algod.Model
+{
+
+    using System = global::System;
+
+    public partial class $def.name {
+    #foreach( $prop in $props )
+    #if( $prop.required)
+    
+        [Newtonsoft.Json.JsonProperty("$prop.propertyName", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+    #else
+        [Newtonsoft.Json.JsonProperty("top-transactions", Required = Newtonsoft.Json.Required.Default,  NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+    #end
+    #set( $propName = $str.kebabToUpperCamel($prop.propertyName) )
+    #if ( $prop.algorandFormat == "SignedTransaction" )
+        #set( $propType = "SignedTransaction" )
+    #elseif ( $prop.algorandFormat == "Address" )
+        #set( $propType = "Address" )
+    #elseif ( $prop.algorandFormat == "TEALProgram" )
+        #set( $propType = "TEALProgram" )
+    #elseif ( $prop.algorandFormat == "BlockHeader" )
+        #set( $propType = "Block" )    
+    #elseif ( $prop.type == "integer" )
+        #set( $propType = "uint64" )
+    #elseif( $prop.type == "binary" )
+        #set( $propType = "byte[]" )
+    #elseif( $prop.type == "boolean" )
+        #set( $propType = "bool" )   
+    #elseif ($prop.arrayType && $prop.format == "byte")
+        #set( $propType = "byte[]" )   
+    #elseif ($prop.type == "string" && $prop.format == "byte")
+        #set( $propType = "byte[]" ) 
+    #elseif( $prop.type == "string" || $prop.arrayType == "string" )
+        #set( $propType = "string" )             
+    #elseif( $prop.type == "object" )
+        #set( $propType = "byte[]" )    
+    #elseif( $prop.type == "address" )
+        #set( $propType = "Address" )
+    #elseif( $prop.arrayType  && $prop.arrayType != "")
+        #set( $propType = $prop.arrayType )
+    #elseif( $prop.refType  && $prop.refType != "")
+        #set( $propType = $prop.refType )    
+    #else
+        UNHANDLED TYPE
+    - ref: $!prop.refType
+    - type: $!prop.type
+    - array type: $!prop.arrayType
+    - algorand format: $!prop.algorandFormat
+    - format: $!prop.format
+    $unknown.type ## force a template failure with an unknown type
+    #end
+    #if( $prop.arrayType && $prop.arrayType != "")
+        public System.Collections.Generic.ICollection<$propType> $propName {get;set;} = new System.Collections.ObjectModel.Collection<$propType>();
+    #else
+        public $propType $propName {get;set;}
+    #end
+    #end
+        
+    }
+
+
+}
