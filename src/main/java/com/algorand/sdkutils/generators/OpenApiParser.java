@@ -524,12 +524,18 @@ public class OpenApiParser {
                 null ? root.get("components").get("schemas") : root.get("definitions");
                 for (Map.Entry<String, JsonNode> cls : getSortedSchema(schemas).entrySet()) {
                     String desc = null;
+                    if (cls.getValue().get("description") != null) {
+                        desc = cls.getValue().get("description").asText();
+                    }
+
+                    TypeDef clsType = getType(cls.getValue(), true, cls.getKey(), false, false);
+                    if (clsType.isOfType("enum")) {
+                        publisher.publish(Events.NEW_PROPERTY, clsType);
+                    }
+
                     if (!hasProperties(cls.getValue())) {
                         // If it has no properties, no class is needed for this type.
                         continue;
-                    }
-                    if (cls.getValue().get("description") != null) {
-                        desc = cls.getValue().get("description").asText();
                     }
                     String className = Tools.getCamelCase(cls.getKey(), true);
                     if (!filterList.isEmpty() && filterList.contains(className)) {
