@@ -291,6 +291,9 @@ public class TemplateGenerator implements Subscriber {
     public void onEvent(Publisher.Events event, TypeDef type) {
         switch(event) {
             case NEW_PROPERTY:
+                if (type.isOfType("enum")) {
+                    break;
+                }
                 activeList.add(type);
                 //javaModelWriter.newProperty(type);
                 break;
