@@ -530,7 +530,7 @@ public class OpenApiParser {
 
                     TypeDef clsType = getType(cls.getValue(), true, cls.getKey(), false, false);
                     if (clsType.isOfType("enum")) {
-                        publisher.publish(Events.NEW_PROPERTY, clsType);
+                        publisher.publish(Events.ENUM_DEFINITION, clsType);
                     }
 
                     if (!hasProperties(cls.getValue())) {
