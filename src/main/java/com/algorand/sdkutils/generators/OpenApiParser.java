@@ -515,7 +515,7 @@ public class OpenApiParser {
         if (spec.has("tags") && spec.get("tags").isArray()) {
             for (JsonNode value : spec.get("tags")) {
                 if (value.isTextual()) {
-                    contentTypes.add(value.asText());
+                    tags.add(value.asText());
                 } else {
                     throw new RuntimeException("Unexpected content type: " + value.toString());
                 }

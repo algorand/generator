@@ -79,7 +79,7 @@ public class QueryDef {
         return name;
     }
 
-    public String getApi() {  if (tags == null || tags.isEmpty()) { return "Default"; } else  { return tags.get(0);} }
+    public String getApi() {  if (tags == null || tags.isEmpty()) { return "default"; } else  { return tags.get(0);} }
 
     public List<String> getTags() { return tags; }
 

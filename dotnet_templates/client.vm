@@ -67,13 +67,14 @@ namespace Algorand.Algod
     public partial interface I${str.capitalize($propFile.api)}Api
     {
 #foreach( $q in $queries )
+#if ($q.api == $propFile.api)
        /// <summary>$q.description</summary>
 #foreach( $parm in $q.allParams )
        /// <param name="$parm.propertyName">$parm.doc</param>
 #end
-       /// <exception cref="ApiException">A server side error occurred.</exception>
+       /// <exception cref="ApiException<ErrorResponse>">A server side error occurred.</exception>
        System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q));
-       
+#end     
 #end
     }
 
@@ -103,7 +104,7 @@ namespace Algorand.Algod
        partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
 
 #foreach( $q in $queries )
-
+#if ($q.api == $propFile.api)
        
 
        /// <summary>$q.description</summary>
@@ -121,7 +122,7 @@ namespace Algorand.Algod
        /// <param name="$parm.propertyName">$parm.doc</param>
 #end
        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-       /// <exception cref="ApiException">A server side error occurred.</exception>
+       /// <exception cref="ApiException<ErrorResponse>">A server side error occurred.</exception>
        public System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q), System.Threading.CancellationToken cancellationToken)
        {
 #foreach( $parm in $q.allParams )
@@ -215,7 +216,7 @@ namespace Algorand.Algod
        }
 
 
-
+#end
 #end
        private string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
        {
