@@ -13,6 +13,8 @@ string##
 types.Block
 #elseif( $setter && ($param.algorandFormat == "base64" || $param.type == "binary" || $param.format == "binary" ) )
 []byte##
+#elseif( $param.type == "string" && $param.format == "byte" )
+[]byte##
 #elseif( $param.type == "binary" )
 string##
 #elseif ( $param.type == "integer" )
