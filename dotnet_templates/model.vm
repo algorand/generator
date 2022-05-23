@@ -22,7 +22,7 @@ namespace Algorand.Algod.Model
     #elseif ( $prop.algorandFormat == "BlockHeader" )
         #set( $propType = "Block" )    
     #elseif ( $prop.type == "integer" )
-        #set( $propType = "uint64" )
+        #set( $propType = "ulong" )
     #elseif( $prop.type == "binary" )
         #set( $propType = "byte[]" )
     #elseif( $prop.type == "boolean" )

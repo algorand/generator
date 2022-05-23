@@ -511,7 +511,18 @@ public class OpenApiParser {
                 }
             }
         }
-        this.publisher.publish(Events.NEW_QUERY, new QueryDef(methodName, returnType, path, desc, httpMethod, contentTypes));
+        List<String> tags = new ArrayList<>();
+        if (spec.has("tags") && spec.get("tags").isArray()) {
+            for (JsonNode value : spec.get("tags")) {
+                if (value.isTextual()) {
+                    contentTypes.add(value.asText());
+                } else {
+                    throw new RuntimeException("Unexpected content type: " + value.toString());
+                }
+            }
+        }
+
+        this.publisher.publish(Events.NEW_QUERY, new QueryDef(methodName, returnType, path, desc, httpMethod, contentTypes, tags));
 
         processQueryParams(properties);
 

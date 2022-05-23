@@ -1,0 +1,89 @@
+#macro ( returnType $query )##
+#if ( ${query.returnType} == "String" )string#elseif 
+(${query.returnType} == "PendingTransactionResponse")IReturnableTransaction#elseif (${query.returnType} == "PendingTransactionsResponse")PendingTransactions#elseif 
+(${query.returnType} == "BlockResponse")CertifiedBlock#else$query.returnType#end
+#end
+
+
+
+
+#macro ( typeConverter $prop $setter)
+#if ( $prop.algorandFormat == "SignedTransaction" )
+#set( $propType = "SignedTransaction" )
+#elseif ( $prop.algorandFormat == "Address" )
+#set( $propType = "Address" )
+#elseif ( $prop.algorandFormat == "TEALProgram" )
+#set( $propType = "TEALProgram" )
+#elseif ( $prop.algorandFormat == "BlockHeader" )
+#set( $propType = "Block" )
+#elseif ( $prop.type == "integer" )
+#set( $propType = "ulong" )
+#elseif( $prop.type == "binary" )
+#set( $propType = "byte[]" )
+#elseif( $prop.type == "boolean" )
+#set( $propType = "bool" )
+#elseif ($prop.arrayType && $prop.format == "byte")
+#set( $propType = "byte[]" )
+#elseif ($prop.type == "string" && $prop.format == "byte")
+#set( $propType = "byte[]" )
+#elseif( $prop.type == "string" && $setter == "true" && $prop.propertyName=="rawtxn")
+#set( $propType = "List<SignedTransaction>" )
+#elseif( $prop.type == "string" && $setter == "true")
+#set( $propType = "System.IO.Stream" )
+#elseif( $prop.type == "string" || $prop.arrayType == "string" )
+#set( $propType = "string" )
+#elseif( $prop.type == "object" )
+#set( $propType = "byte[]" )
+#elseif( $prop.type == "address" )
+#set( $propType = "Address" )
+#elseif( $prop.type == "PendingTransactionResponse" )
+#set( $propType = "ReturnedTransaction" )
+#elseif( $prop.arrayType && $prop.arrayType != "")
+#set( $propType = $prop.arrayType )
+#elseif( $prop.refType  && $prop.refType != "")
+#set( $propType = $prop.refType )
+#else
+#set( $propType = $prop.type )
+#end
+#end
+
+#macro ( oapiToCSharp $param $setter )##
+#if ( $param.algorandFormat == "RFC3339 String" )
+string##
+#elseif ( $param.algorandFormat == "BlockHeader" )
+types.Block
+#elseif( $setter && ($param.algorandFormat == "base64" || $param.type == "binary" || $param.format == "binary" ) )
+[]byte##
+#elseif( $param.type == "binary" )
+string##
+#elseif ( $param.type == "integer" )
+uint64##
+#elseif ( $param.type == "string" )
+string##
+#elseif ( $param.type == "boolean" )
+bool##
+#elseif( $param.arrayType == "string" )
+[]string##
+#elseif ( $!param.refType )
+models.${param.refType}##
+#else
+UNHANDLED TYPE
+- ref: $!param.refType
+- type: $!param.type
+- array type: $!param.arrayType
+- algorand format: $!param.algorandFormat
+- format: $!param.format
+##$unknown.type ## force a template failure with an unknown type
+#end
+#end
+
+
+
+#macro ( pathParamToArgDef $param )#typeConverter($param, false)$propType $str.kebabToCamel($param.propertyName)#end
+
+#macro ( queryParamToArgDef $param )
+#if ($param.propertyName=="format") Format? format#else
+#typeConverter($param, false)$propType? $str.kebabToCamel($param.propertyName)#end
+#end
+
+#macro ( bodyParamToArgDef $param )#typeConverter($param, true)$propType $str.kebabToCamel($param.propertyName)#end

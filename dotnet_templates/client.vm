@@ -1,0 +1,268 @@
+#set( $skip = $propFile.query_skip.split(",") )
+#parse("common_macros.vm")
+## Given a query print the arg list to the function.
+#macro( queryToClientArgs $query )
+#set( $sep = "" )
+#foreach( $p in $query.pathParameters )
+$sep#pathParamToArgDef($p)
+#set( $sep = ", " )
+#end
+#foreach( $p in $query.bodyParameters )
+$sep#bodyParamToArgDef($p)
+#set( $sep = ", " )
+#end
+#foreach( $p in $query.queryParameters )
+$sep#queryParamToArgDef($p)  
+#set( $sep = ", " )
+#end
+#end
+## Given a query print the struct initialization.
+#macro( queryToStructInit $query )
+&${queryType}{c: c##
+#foreach( $p in $query.pathParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+#foreach( $p in $query.bodyParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+}
+#end
+#macro( queryToClientArgList $query )
+#set( $sep = "" )
+#foreach( $p in $query.pathParameters )
+$sep$p.propertyName#set( $sep = ", " )
+#end
+#foreach( $p in $query.bodyParameters )
+$sep$p.propertyName#set( $sep = ", " )
+#end
+#foreach( $p in $query.queryParameters )
+$sep$p.propertyName#set( $sep = ", " )
+#end
+#end
+## Given a query print the struct initialization.
+#macro( queryToStructInit $query )
+&${queryType}{c: c##
+#foreach( $p in $query.pathParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+#foreach( $p in $query.bodyParameters )
+, $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
+#end
+}
+#end
+#macro(mapQueryName $queryName)
+#if ($queryName=="RawTransaction")
+Transactions#else
+$queryName#end
+#end
+namespace Algorand.Algod
+{
+    using Algorand.Utils;
+    using Algorand.Algod.Model;
+    using System.Collections.Generic;
+    using System.IO;
+    using System = global::System;
+
+
+    public partial interface I${str.capitalize($propFile.api)}Api
+    {
+#foreach( $q in $queries )
+       /// <summary>$q.description</summary>
+#foreach( $parm in $q.allParams )
+       /// <param name="$parm.propertyName">$parm.doc</param>
+#end
+       /// <exception cref="ApiException">A server side error occurred.</exception>
+       System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q));
+       
+#end
+    }
+
+    public partial class ${str.capitalize($propFile.api)}Api : I${str.capitalize($propFile.api)}Api
+    {
+       private System.Net.Http.HttpClient _httpClient;
+       private System.Lazy<Newtonsoft.Json.JsonSerializerSettings> _settings;
+
+       public ${str.capitalize($propFile.api)}Api(System.Net.Http.HttpClient httpClient)
+       {
+              _httpClient = httpClient;
+              _settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(CreateSerializerSettings);
+       }
+       
+       private Newtonsoft.Json.JsonSerializerSettings CreateSerializerSettings()
+       {
+              var settings = new Newtonsoft.Json.JsonSerializerSettings();
+              UpdateJsonSerializerSettings(settings);
+              return settings;
+       }  
+
+       protected Newtonsoft.Json.JsonSerializerSettings JsonSerializerSettings { get { return _settings.Value; } }
+
+       partial void UpdateJsonSerializerSettings(Newtonsoft.Json.JsonSerializerSettings settings);
+       partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url);
+       partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
+       partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
+
+#foreach( $q in $queries )
+
+       
+
+       /// <summary>$q.description</summary>
+#foreach( $parm in $q.allParams )
+       /// <param name="$parm.propertyName">$parm.doc</param>
+#end
+       /// <exception cref="ApiException">A server side error occurred.</exception>
+       public System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q))
+       {
+              return #mapQueryName($q.Name)Async(#queryToClientArgList($q),System.Threading.CancellationToken.None)
+       }
+
+       /// <summary>$q.description</summary>
+#foreach( $parm in $q.allParams )
+       /// <param name="$parm.propertyName">$parm.doc</param>
+#end
+       /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+       /// <exception cref="ApiException">A server side error occurred.</exception>
+       public System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q), System.Threading.CancellationToken cancellationToken)
+       {
+#foreach( $parm in $q.allParams )
+#if($parm.Required=="true")
+              if ($parm.propertyName == null) throw new System.ArgumentNullException("$parm.propertyName");
+#end
+#end
+              var urlBuilder_ = new System.Text.StringBuilder();
+#if($q.queryParameters.size()>0)
+              urlBuilder_.Append("$q.path?");
+#else              
+              urlBuilder_.Append("$q.path");
+#end              
+#foreach( $parm in $q.pathParameters )
+              urlBuilder_.Replace("{$parm.propertyName}", System.Uri.EscapeDataString(ConvertToString($parm.propertyName, System.Globalization.CultureInfo.InvariantCulture)));
+#end
+
+              var client_ = _httpClient;
+              var disposeClient_ = false;
+              try
+              {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                     request_.Method = new System.Net.Http.HttpMethod("$q.method.toUpperCase()");
+                     request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+#if($q.bodyParameters.size()>0)
+#if($q.Name=="RawTransaction" || $q.Name=="Dryrun") 
+                     System.Net.Http.ByteArrayContent content_ = new System.Net.Http.ByteArrayContent(Encoder.EncodeToMsgPackOrdered($q.bodyParameters.get(0).propertyName));
+                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/msgpack");
+#else
+                     var content_ = new System.Net.Http.StreamContent(source);
+                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("text/plain");
+#end
+                     request_.Content = content_;
+#end
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<#returnType($q)>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        //Algorand Generator cannot distinguish between response codes
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ErrorResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new ApiException<ErrorResponse>("Error", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+
+       }
+
+
+
+#end
+       private string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
+       {
+              if (value == null)
+              {
+                     return "";
+              }
+
+              if (value is System.Enum)
+              {
+                     var name = System.Enum.GetName(value.GetType(), value);
+                     if (name != null)
+                     {
+                     var field = System.Reflection.IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
+                     if (field != null)
+                     {
+                            var attribute = System.Reflection.CustomAttributeExtensions.GetCustomAttribute(field, typeof(System.Runtime.Serialization.EnumMemberAttribute))
+                            as System.Runtime.Serialization.EnumMemberAttribute;
+                            if (attribute != null)
+                            {
+                            return attribute.Value != null ? attribute.Value : name;
+                            }
+                     }
+
+                     var converted = System.Convert.ToString(System.Convert.ChangeType(value, System.Enum.GetUnderlyingType(value.GetType()), cultureInfo));
+                     return converted == null ? string.Empty : converted;
+                     }
+              }
+              else if (value is bool)
+              {
+                     return System.Convert.ToString((bool)value, cultureInfo).ToLowerInvariant();
+              }
+              else if (value is byte[])
+              {
+                     return System.Convert.ToBase64String((byte[])value);
+              }
+              else if (value.GetType().IsArray)
+              {
+                     var array = System.Linq.Enumerable.OfType<object>((System.Array)value);
+                     return string.Join(",", System.Linq.Enumerable.Select(array, o => ConvertToString(o, cultureInfo)));
+              }
+
+              var result = System.Convert.ToString(value, cultureInfo);
+              return result == null ? "" : result;
+              }
+       }
+
+    }
+
+}
