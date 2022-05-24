@@ -118,6 +118,9 @@ public class JavaGenerator implements Subscriber {
         case BODY_CONTENT:
             javaQueryWriter.addQueryProperty(type, false, false, true);
             break;
+        case ENUM_DEFINITION:
+            this.storeEnumDefinition(type);
+            break;
         default:
             throw new RuntimeException("Unimplemented event for TypeDef! " + event);
         }
