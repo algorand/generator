@@ -303,6 +303,9 @@ public class TemplateGenerator implements Subscriber {
             case BODY_CONTENT:
                 activeQuery.bodyParameters.add(type);
                 break;
+            case ENUM_DEFINITION:
+                // do nothing for enum definitions
+                break;
             default:
                 logger.info("unhandled event (Events, TypeDef): {}", event);
         }
