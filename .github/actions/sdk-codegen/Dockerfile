@@ -26,9 +26,9 @@ ENV GITHUB_EMAIL="codegen@algorand.com"
 ENV GITHUB_URL_BASE="https://github.com/"
 ENV GO_ALGORAND_REPO="algorand/go-algorand"
 ENV INDEXER_REPO="algorand/indexer"
-ENV JS_SDK_REPO="Eric-Warehime/js-algorand-sdk"
-ENV GO_SDK_REPO="Eric-Warehime/go-algorand-sdk"
-ENV JAVA_SDK_REPO="Eric-Warehime/java-algorand-sdk"
+ENV JS_SDK_REPO="algorand/js-algorand-sdk"
+ENV GO_SDK_REPO="algorand/go-algorand-sdk"
+ENV JAVA_SDK_REPO="algorand/java-algorand-sdk"
 
 # ------------------------------------
 # Utility environment variables

@@ -35,7 +35,7 @@ function generate_js {
   JS_SDK_DIR=/clones/js-algorand-sdk
   TEMPLATE_DIR=$GENERATOR_DIR/typescript_templates
   export GH_REPO=$JS_SDK_REPO
-  git clone https://github.com/Eric-Warehime/js-algorand-sdk $JS_SDK_DIR
+  git clone https://github.com/algorand/js-algorand-sdk $JS_SDK_DIR
   # Generate algod.
   $TEMPLATE \
     -s "$ALGOD_SPEC" \
@@ -53,7 +53,7 @@ function generate_go {
   GO_SDK_DIR=/clones/go-algorand-sdk
   TEMPLATE_DIR=$GENERATOR_DIR/go_templates
   export GH_REPO=$GO_SDK_REPO
-  git clone https://github.com/Eric-Warehime/go-algorand-sdk $GO_SDK_DIR
+  git clone https://github.com/algorand/go-algorand-sdk $GO_SDK_DIR
   # Generate algod.
   $TEMPLATE \
     -s $ALGOD_SPEC \
@@ -80,7 +80,7 @@ function generate_go {
 function generate_java {
   JAVA_SDK_DIR=/clones/java-algorand-sdk
   export GH_REPO=$JAVA_SDK_REPO
-  git clone https://github.com/Eric-Warehime/java-algorand-sdk $JAVA_SDK_DIR
+  git clone https://github.com/algorand/java-algorand-sdk $JAVA_SDK_DIR
 
  $GENERATOR \
     java \

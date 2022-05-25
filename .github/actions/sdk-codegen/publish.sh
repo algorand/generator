@@ -83,8 +83,8 @@ git -c core.hooksPath=/dev/null push --set-upstream origin $PR_BRANCH # disable 
 # ==============================
 
 # Design PR content
-ALGOD_REPO_URL="https://github.com/Eric-Warehime/go-algorand"
-INDEXER_REPO_URL="https://github.com/Eric-Warehime/indexer"
+ALGOD_REPO_URL="https://github.com/algorand/go-algorand"
+INDEXER_REPO_URL="https://github.com/algorand/indexer"
 
 PR_BODY="This PR was automatically created using [Algorand's code generator](https://github.com/algorand/generator), in response to the following commits:
 
@@ -109,4 +109,3 @@ gh pr create \
   $BASE_ARG_PAIR \
   --title "Regenerate code with the latest specification file ($PR_ID)" \
   --body "$PR_BODY"
-# --label "generated"
