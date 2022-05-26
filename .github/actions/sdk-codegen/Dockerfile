@@ -38,8 +38,8 @@ ENV INDEXER_DIR="/clones/indexer"
 ENV GENERATOR_DIR="/clones/generator"
 
 # Retrieve spec files
-RUN git clone $GITHUB_URL_BASE$GO_ALGORAND_REPO "$GO_ALGORAND_DIR"
-RUN git clone $GITHUB_URL_BASE$INDEXER_REPO "$INDEXER_DIR"
+RUN git clone --depth 1 $GITHUB_URL_BASE$GO_ALGORAND_REPO "$GO_ALGORAND_DIR"
+RUN git clone --depth 1 $GITHUB_URL_BASE$INDEXER_REPO "$INDEXER_DIR"
 ENV ALGOD_SPEC="${GO_ALGORAND_DIR}/daemon/algod/api/algod.oas2.json"
 ENV INDEXER_SPEC="${INDEXER_DIR}/api/indexer.oas2.json"
 
