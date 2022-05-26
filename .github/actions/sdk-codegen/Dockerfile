@@ -44,7 +44,7 @@ ENV ALGOD_SPEC="${GO_ALGORAND_DIR}/daemon/algod/api/algod.oas2.json"
 ENV INDEXER_SPEC="${INDEXER_DIR}/api/indexer.oas2.json"
 
 # Build generator 
-RUN git clone https://github.com/algorand/generator $GENERATOR_DIR
+RUN git clone --depth 1 https://github.com/algorand/generator $GENERATOR_DIR
 WORKDIR $GENERATOR_DIR
 RUN mvn package
 ENV TEMPLATE="java -jar ${GENERATOR_DIR}/target/generator-*-jar-with-dependencies.jar template"
