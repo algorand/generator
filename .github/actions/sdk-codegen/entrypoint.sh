@@ -106,7 +106,6 @@ function generate_java {
 
   pushd $JAVA_SDK_DIR
   /publish.sh
-
 }
 
 function generate() {
