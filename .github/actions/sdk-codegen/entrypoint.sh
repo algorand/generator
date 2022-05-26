@@ -18,18 +18,13 @@ while (( "$#" )); do
     -h)
       help
       ;;
-    -*|--*=) # unsupported flags
+    *) # unsupported flags
       echo "Error: Unsupported flag $1" >&2
       exit 1
-      ;;
-    *) # preserve positional arguments
-      PARAMS="$PARAMS $1"
       ;;
   esac
   shift
 done
-# set positional arguments in their proper place
-eval set -- "$PARAMS"
 
 function generate_js {
   JS_SDK_DIR=/clones/js-algorand-sdk
