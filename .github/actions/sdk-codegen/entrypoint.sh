@@ -30,7 +30,7 @@ function generate_js {
   JS_SDK_DIR=/clones/js-algorand-sdk
   TEMPLATE_DIR=$GENERATOR_DIR/typescript_templates
   export GH_REPO=$JS_SDK_REPO
-  git clone https://github.com/algorand/js-algorand-sdk $JS_SDK_DIR
+  git clone --depth 1 https://github.com/algorand/js-algorand-sdk $JS_SDK_DIR
   # Generate algod.
   $TEMPLATE \
     -s "$ALGOD_SPEC" \
