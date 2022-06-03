@@ -1,0 +1,983 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+      "title": "AlgodProxy",
+      "version": "v1"
+    },
+    "paths": {
+      "/Algod": {
+        "get": {
+          "tags": [
+            "Algod"
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.SignedTransaction"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.SignedTransaction"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.SignedTransaction"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Algorand.Address": {
+          "type": "object",
+          "properties": {
+            "bytes": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.AssetParams": {
+          "type": "object",
+          "properties": {
+            "c": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "clawback": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "creator": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "dc": {
+              "maximum": 19,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            },
+            "decimals": {
+              "type": "integer",
+              "format": "int64",
+              "writeOnly": true
+            },
+            "df": {
+              "type": "boolean",
+              "default": false,
+              "nullable": true
+            },
+            "default-frozen": {
+              "type": "boolean",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "f": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "freeze": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "m": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "manager": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "am": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            },
+            "metadata-hash": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "an": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "name-b64": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "r": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "reserve": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "t": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "total": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "un": {
+              "type": "string",
+              "nullable": true
+            },
+            "unit-name": {
+              "type": "string",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "unit-name-b64": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "au": {
+              "type": "string",
+              "nullable": true
+            },
+            "url": {
+              "type": "string",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "url-b64": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true,
+              "writeOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationCallTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.Transaction"
+            }
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "nullable": true,
+              "readOnly": true
+            },
+            "apat": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Algorand.Address"
+              },
+              "nullable": true
+            },
+            "apaa": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "byte"
+              },
+              "nullable": true
+            },
+            "apfa": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "nullable": true
+            },
+            "apas": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationClearStateTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+            }
+          ],
+          "properties": {
+            "apid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            },
+            "apan": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.OnCompletion"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationCloseOutTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+            }
+          ],
+          "properties": {
+            "apid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "apan": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.OnCompletion"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationCreateTransaction": {
+          "required": [
+            "apap",
+            "apgs",
+            "apls",
+            "apsu"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationNoopTransaction"
+            }
+          ],
+          "properties": {
+            "apap": {
+              "$ref": "#/components/schemas/Algorand.TEALProgram"
+            },
+            "apsu": {
+              "$ref": "#/components/schemas/Algorand.TEALProgram"
+            },
+            "apgs": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.StateSchema"
+            },
+            "apls": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.StateSchema"
+            },
+            "apep": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationDeleteTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+            }
+          ],
+          "properties": {
+            "apid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "apan": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.OnCompletion"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationNoopTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+            }
+          ],
+          "properties": {
+            "apid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "apan": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.OnCompletion"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationOptInTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+            }
+          ],
+          "properties": {
+            "apid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "apan": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.OnCompletion"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.ApplicationUpdateTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+            }
+          ],
+          "properties": {
+            "apid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "apan": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.OnCompletion"
+            },
+            "apap": {
+              "$ref": "#/components/schemas/Algorand.TEALProgram"
+            },
+            "apsu": {
+              "$ref": "#/components/schemas/Algorand.TEALProgram"
+            },
+            "apgs": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.StateSchema"
+            },
+            "apls": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.StateSchema"
+            },
+            "apep": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetAcceptTransaction": {
+          "required": [
+            "arcv"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetMovementsTransaction"
+            }
+          ],
+          "properties": {
+            "arcv": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetChangeTransaction": {
+          "required": [
+            "caid"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetConfigurationTransaction"
+            }
+          ],
+          "properties": {
+            "caid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetClawbackTransaction": {
+          "required": [
+            "aamt",
+            "arcv",
+            "asnd"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetMovementsTransaction"
+            }
+          ],
+          "properties": {
+            "aamt": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            },
+            "asnd": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "arcv": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetConfigurationTransaction": {
+          "required": [
+            "type"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.Transaction"
+            }
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetCreateTransaction": {
+          "required": [
+            "apar"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetConfigurationTransaction"
+            }
+          ],
+          "properties": {
+            "apar": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.AssetParams"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetDestroyTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetChangeTransaction"
+            }
+          ],
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetFreezeTransaction": {
+          "required": [
+            "fadd",
+            "faid",
+            "type"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.Transaction"
+            }
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "readOnly": true
+            },
+            "fadd": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "faid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            },
+            "afrz": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetMovementsTransaction": {
+          "required": [
+            "type",
+            "xaid"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.Transaction"
+            }
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "readOnly": true
+            },
+            "xaid": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetTransferTransaction": {
+          "required": [
+            "aamt",
+            "arcv"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetMovementsTransaction"
+            }
+          ],
+          "properties": {
+            "aamt": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            },
+            "arcv": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "aclose": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.AssetUpdateTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetChangeTransaction"
+            }
+          ],
+          "properties": {
+            "apar": {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.AssetParams"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.KeyRegisterOfflineTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.KeyRegistrationTransaction"
+            }
+          ],
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.KeyRegisterOnlineTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.KeyRegistrationTransaction"
+            }
+          ],
+          "properties": {
+            "votekey": {
+              "$ref": "#/components/schemas/Algorand.ParticipationPublicKey"
+            },
+            "selkey": {
+              "$ref": "#/components/schemas/Algorand.VRFPublicKey"
+            },
+            "votefst": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "votelst": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "votekd": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "nonpart": {
+              "type": "boolean",
+              "default": false,
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.KeyRegistrationTransaction": {
+          "required": [
+            "type"
+          ],
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.Transaction"
+            }
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.OnCompletion": {
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "type": "integer",
+          "format": "int32"
+        },
+        "Algorand.Algod.Model.Transactions.PaymentTransaction": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.Transaction"
+            }
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "nullable": true,
+              "readOnly": true
+            },
+            "amt": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "amount": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "writeOnly": true
+            },
+            "rcv": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "close": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.SignedTransaction": {
+          "type": "object",
+          "properties": {
+            "txn": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCallTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationClearStateTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCloseOutTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationCreateTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationDeleteTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationNoopTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationOptInTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.ApplicationUpdateTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetAcceptTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetChangeTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetClawbackTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetConfigurationTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetCreateTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetDestroyTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetFreezeTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetMovementsTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetTransferTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.AssetUpdateTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.KeyRegisterOfflineTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.KeyRegisterOnlineTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.KeyRegistrationTransaction"
+                },
+                {
+                  "$ref": "#/components/schemas/Algorand.Algod.Model.Transactions.PaymentTransaction"
+                }
+              ],
+              "nullable": true
+            },
+            "sig": {
+              "$ref": "#/components/schemas/Algorand.Signature"
+            },
+            "msig": {
+              "$ref": "#/components/schemas/Algorand.MultisigSignature"
+            },
+            "lsig": {
+              "$ref": "#/components/schemas/Algorand.LogicsigSignature"
+            },
+            "sgnr": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.StateSchema": {
+          "type": "object",
+          "properties": {
+            "nui": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "nbs": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Algod.Model.Transactions.Transaction": {
+          "type": "object",
+          "properties": {
+            "snd": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "fee": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "fv": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "lv": {
+              "type": "integer",
+              "format": "int64",
+              "default": 0,
+              "nullable": true
+            },
+            "note": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            },
+            "gen": {
+              "type": "string",
+              "default": "",
+              "nullable": true
+            },
+            "gh": {
+              "$ref": "#/components/schemas/Algorand.Digest"
+            },
+            "grp": {
+              "$ref": "#/components/schemas/Algorand.Digest"
+            },
+            "lx": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            },
+            "rekey": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Digest": {
+          "type": "object",
+          "properties": {
+            "bytes": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.LogicsigSignature": {
+          "type": "object",
+          "properties": {
+            "l": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            },
+            "arg": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "byte"
+              },
+              "nullable": true
+            },
+            "sig": {
+              "$ref": "#/components/schemas/Algorand.Signature"
+            },
+            "msig": {
+              "$ref": "#/components/schemas/Algorand.MultisigSignature"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.MultisigSignature": {
+          "type": "object",
+          "properties": {
+            "v": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "thr": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "subsig": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Algorand.MultisigSubsig"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.MultisigSubsig": {
+          "type": "object",
+          "properties": {
+            "pk": {
+              "$ref": "#/components/schemas/Org.BouncyCastle.Crypto.Parameters.Ed25519PublicKeyParameters"
+            },
+            "s": {
+              "$ref": "#/components/schemas/Algorand.Signature"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.ParticipationPublicKey": {
+          "type": "object",
+          "properties": {
+            "bytes": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.Signature": {
+          "type": "object",
+          "properties": {
+            "bytes": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true,
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.TEALProgram": {
+          "type": "object",
+          "properties": {
+            "bytes": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true,
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "Algorand.VRFPublicKey": {
+          "type": "object",
+          "properties": {
+            "bytes": {
+              "type": "string",
+              "format": "byte",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
