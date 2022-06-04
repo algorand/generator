@@ -4,7 +4,11 @@ namespace $propFile.namespace
 
     using System = global::System;
 
-    public partial class $def.name {
+#if($!def.parentType && $!def.parentType != "" )
+    public partial class $def.name : $!def.parentType{
+#else
+    public partial class $def.name
+#end
     #foreach( $prop in $props )
     #if( $prop.required)
     

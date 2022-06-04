@@ -382,6 +382,12 @@ public class OpenApiParser {
             }
         }
 
+        String parentType=null;
+        if (parentNode.has("allOf") ) {
+            JsonNode refNode=parentNode.get("allOf").get(0).get("$ref");
+            parentType = getTypeNameFromRef(refNode);
+        }
+
         List<TypeDef> properties = new ArrayList<>();
 
         // type: object
@@ -400,7 +406,7 @@ public class OpenApiParser {
             throw new RuntimeException("Unexpected type.");
         }
 
-        publisher.publish(event, new StructDef(className, desc, properties, requiredProperties, mutuallyExclusiveProperties));
+        publisher.publish(event, new StructDef(className, desc, properties, requiredProperties, mutuallyExclusiveProperties,parentType));
         properties.forEach(p -> publisher.publish(Events.NEW_PROPERTY, p));
     }
 
