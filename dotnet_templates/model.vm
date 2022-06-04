@@ -1,4 +1,5 @@
-namespace Algorand.Algod.Model
+
+namespace $propFile.namespace
 {
 
     using System = global::System;
@@ -10,11 +11,17 @@ namespace Algorand.Algod.Model
         [Newtonsoft.Json.JsonProperty("$prop.propertyName", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
     #else
-        [Newtonsoft.Json.JsonProperty("top-transactions", Required = Newtonsoft.Json.Required.Default,  NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("$prop.propertyName", Required = Newtonsoft.Json.Required.Default,  NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
     #end
-    #set( $propName = $str.kebabToUpperCamel($prop.propertyName) )
+    #if (!$prop.algorandLongNameAlias || $prop.algorandLongNameAlias=="")
+        #set( $propName = $str.kebabToUpperCamel($prop.propertyName) )
+    #else
+        #set( $propName = $str.kebabToUpperCamel($prop.algorandLongNameAlias) )
+    #end
     #if ( $prop.algorandFormat == "SignedTransaction" )
         #set( $propType = "SignedTransaction" )
+    #elseif ( $prop.algorandFormat == "Transaction" )
+        #set( $propType = "Transaction" )
     #elseif ( $prop.algorandFormat == "Address" )
         #set( $propType = "Address" )
     #elseif ( $prop.algorandFormat == "TEALProgram" )
@@ -42,12 +49,14 @@ namespace Algorand.Algod.Model
     #elseif( $prop.refType  && $prop.refType != "")
         #set( $propType = $prop.refType )    
     #else
-        UNHANDLED TYPE
+        UNHANDLED TYPE **
+    - name: $!propName
     - ref: $!prop.refType
     - type: $!prop.type
     - array type: $!prop.arrayType
     - algorand format: $!prop.algorandFormat
     - format: $!prop.format
+    - prop: $prop
     $unknown.type ## force a template failure with an unknown type
     #end
     #if( $prop.arrayType && $prop.arrayType != "")

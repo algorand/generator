@@ -69,7 +69,7 @@ public class OpenApiParser {
 
     // Get array type of base64 encoded bytes.
     // It provides the special getter/setter needed for this type
-    static TypeDef getEnum(JsonNode prop, String propName, String goPropertyName, String openApiType, String openApiArrayType, String openApiFormat, String openApiAlgorandFormat, String openApiGoName) {
+    static TypeDef getEnum(JsonNode prop, String propName, String goPropertyName, String openApiType, String openApiArrayType, String openApiFormat, String openApiAlgorandFormat, String openApiGoName, String openApiLongNameAlias) {
         JsonNode enumNode = prop.get("enum");
         if (enumNode == null) {
             // case of array of enum
@@ -94,13 +94,13 @@ public class OpenApiParser {
         String desc = prop.get("description") == null ? "" : prop.get("description").asText();
 
         String type = prop.get("type").asText();
-        TypeDef td = new TypeDef(enumClassName, type, "enum", propName, goPropertyName, desc, isRequired(prop), null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, openApiGoName);
+        TypeDef td = new TypeDef(enumClassName, type, "enum", propName, goPropertyName, desc, isRequired(prop), null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, openApiGoName, openApiLongNameAlias);
         td.enumValues = enumValues;
         td.openApiType = type;
         return td;
     }
 
-    // getType returns the type fron the JsonNode
+    // getType returns the type from the JsonNode
     TypeDef getType(
             JsonNode prop,
             boolean asObject,
@@ -108,9 +108,13 @@ public class OpenApiParser {
             boolean forModel,
             boolean requiredInStruct) {
 
+        String openApiAlgorandFormat="";
+        String openApiLongNameAlias="";
+
         String desc = prop.get("description") == null ? "" : prop.get("description").asText();
         String goName = prop.get("x-go-name") != null ? prop.get("x-go-name").asText() : "";
         JsonNode refNode = prop.get("$ref");
+
 
         // Override passed required value if the prop itself is marked as required in the parent struct
         boolean required = requiredInStruct || isRequired(prop);
@@ -119,6 +123,15 @@ public class OpenApiParser {
         if (refNode == null && prop.get("schema") != null) {
             refNode = prop.get("schema").get("$ref");
         }
+
+        //Properties may have additional fields or extensions to the referenced sub-schema. Required by .NET templates
+        //for x-algorand- extensions on the properties themselves.
+        if (refNode==null && prop.get("allOf") != null){
+            refNode = prop.get("allOf").get(0).get("$ref");
+            openApiAlgorandFormat = prop.has("x-algorand-format") ? prop.get("x-algorand-format").asText() : null;
+            openApiLongNameAlias = prop.has("x-algorand-longname") ? prop.get("x-algorand-longname").asText() : null;
+        }
+
         String refType = getTypeNameFromRef(refNode);
 
         // Handle reference type
@@ -126,41 +139,56 @@ public class OpenApiParser {
             // Need to check here if this type does not have a class of its own
             // No C/C++ style typedef in java, and this type could be a class with no properties
             prop = getFromRef(refNode.asText());
-            required = requiredInStruct || isRequired(prop);
-            if (desc.isEmpty()) {
-                desc = prop.get("description") == null ? "" : prop.get("description").asText();
-            }
-            // TODO: Why does this need to be handled outside the main switch below?
-            if (hasProperties(prop)) {
-                return new TypeDef(refType, refType, "", propName, goName, desc, required, refType, null, null, null, null, goName);
+            if (prop!=null) {
+                required = requiredInStruct || isRequired(prop);
+                if (desc.isEmpty()) {
+                    desc = prop.get("description") == null ? "" : prop.get("description").asText();
+                }
+                // TODO: Why does this need to be handled outside the main switch below?
+
+                if (hasProperties(prop)) {
+                    return new TypeDef(refType, refType, "", propName, goName, desc, required, refType, null, null, null, openApiAlgorandFormat, goName,openApiLongNameAlias);
+                }
+            }else
+            {
+                //handle 'dangling' references for situations where only part of the codebase needs to be automatically generated
+                return new TypeDef(refType,refType,"",propName,goName,desc, requiredInStruct, refType,null,null,null,openApiAlgorandFormat,goName,openApiLongNameAlias);
             }
         }
 
         JsonNode typeNode = prop.get("type") != null ? prop : prop.get("schema");
         String format = getTypeFormat(typeNode, propName);
-        String openApiType = typeNode.get("type").asText();
-        String openApiFormat = typeNode.has("format") ? typeNode.get("format").asText() : null;
-        String openApiAlgorandFormat = typeNode.has("x-algorand-format") ? typeNode.get("x-algorand-format").asText() : null;
-        JsonNode arrayTypeNode = typeNode.get("items");
+        String openApiType="";
+        String openApiFormat="";
+
+        JsonNode arrayTypeNode=null;
+        if (typeNode!=null) {
+            openApiType = typeNode.get("type").asText();
+            openApiFormat = typeNode.has("format") ? typeNode.get("format").asText() : null;
+            openApiAlgorandFormat = typeNode.has("x-algorand-format") ? typeNode.get("x-algorand-format").asText() : null;
+            openApiLongNameAlias = typeNode.has("x-algorand-longname") ? typeNode.get("x-algorand-longname").asText() : null;
+            arrayTypeNode = typeNode.get("items");
+        }
+
         String openApiArrayType = arrayTypeNode != null && arrayTypeNode.has("type") ? arrayTypeNode.get("type").asText() : null;
         openApiFormat = openApiFormat == null && arrayTypeNode != null && arrayTypeNode.has("format") ? arrayTypeNode.get("format").asText() : openApiFormat;
 
         if (prop.get("enum") != null) {
-            return getEnum(prop, propName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return getEnum(prop, propName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
         }
 
-        if (!format.isEmpty() ) {
+        if (format!=null && !format.isEmpty() ) {
             switch (format) {
             case "uint64":
-                return new TypeDef("java.math.BigInteger", openApiType, "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("java.math.BigInteger", openApiType, "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
             case "RFC3339 String":
-                return new TypeDef("Date", "time", "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("Date", "time", "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
             case "Address":
                 return new TypeDef("Address", "address", "getterSetter", propName,
-                        goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                        goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
 
             case "SignedTransaction":
-                return new TypeDef("SignedTransaction", format, "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("SignedTransaction", format, "", propName, goName, desc, required, null, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
             case "binary":
             case "byte":
             case "base64":
@@ -178,29 +206,29 @@ public class OpenApiParser {
 
                     // getterSetter typeName is only used in path.
                     return new TypeDef("", rawType, "getterSetter,array",
-                            propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                            propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
                 } else {
                     return new TypeDef("byte[]", "binary", "getterSetter",
-                            propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                            propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
                 }
             case "AccountID":
                 break;
             case "BlockCertificate":
             case "BlockHeader":
-                return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+                return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
             }
         }
         switch (openApiType) {
         case "integer":
             String longName = asObject ? "Long" : "long";
-            return new TypeDef(longName, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef(longName, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
         case "object":
-            return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
         case "string":
-            return new TypeDef("String", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef("String", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
         case "boolean":
             String boolName = asObject ? "Boolean" : "boolean";
-            return new TypeDef(boolName, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef(boolName, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
         case "array":
             // Resolve references
             TypeDef typeName = getType(arrayTypeNode, asObject, propName, forModel, required);
@@ -220,14 +248,14 @@ public class OpenApiParser {
             if (typeName.javaTypeName.startsWith("Enums")) {
                oldArrayType += ",enum";
                String enumClassName = typeName.javaTypeName.substring(typeName.javaTypeName.indexOf(".")+1);
-               TypeDef enumType = getEnum(prop, enumClassName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+               TypeDef enumType = getEnum(prop, enumClassName, goName, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
                enumValues = enumType.enumValues;
             }
             return new TypeDef("List<" + typeName.javaTypeName + ">", typeName.rawTypeName,
                     oldArrayType, propName, goName, desc, required,
-                    refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName, enumValues);
+                    refType, openApiType, resolvedArrayType, openApiFormat, resolvedAlgoFormat, goName, enumValues,openApiLongNameAlias);
         default:
-            return new TypeDef(openApiType, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName);
+            return new TypeDef(openApiType, openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
         }
     }
 
@@ -377,7 +405,7 @@ public class OpenApiParser {
     }
 
     static boolean isRequired(JsonNode prop) {
-        if (prop.get("required") != null) {
+        if (prop!=null && prop.get("required") != null) {
             if (prop.get("required").isBoolean()) {
                 return prop.get("required").asBoolean();
             }

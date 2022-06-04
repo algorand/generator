@@ -1,1 +1,4 @@
+#set( $skip = $propFile.model_skip.split(",") )
+#if ( ! $skip.contains($def.name) )
 ${def.name}.cs
+#end
