@@ -30,13 +30,13 @@ $sep#queryParamToArgDef($p)
 #macro( queryToClientArgList $query )
 #set( $sep = "" )
 #foreach( $p in $query.pathParameters )
-$sep$p.propertyName#set( $sep = ", " )
+$sep$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
 #end
 #foreach( $p in $query.bodyParameters )
-$sep$p.propertyName#set( $sep = ", " )
+$sep$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
 #end
 #foreach( $p in $query.queryParameters )
-$sep$p.propertyName#set( $sep = ", " )
+$sep$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
 #end
 #end
 ## Given a query print the struct initialization.
@@ -59,6 +59,7 @@ namespace Algorand.Algod
 {
     using Algorand.Utils;
     using Algorand.Algod.Model;
+    using Algorand.Algod.Model.Transactions;
     using System.Collections.Generic;
     using System.IO;
     using System = global::System;
@@ -68,12 +69,20 @@ namespace Algorand.Algod
     {
 #foreach( $q in $queries )
 #if ($q.api == $propFile.api)
-       /// <summary>$q.description</summary>
+       /// <summary>$str.formatDoc($q.description, "/// ")
+       /// </summary>
 #foreach( $parm in $q.allParams )
        /// <param name="$parm.propertyName">$parm.doc</param>
 #end
        /// <exception cref="ApiException<ErrorResponse>">A server side error occurred.</exception>
        System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q));
+
+#foreach( $parm in $q.allParams )
+       /// <param name="$parm.propertyName">$parm.doc</param>
+#end
+       /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+       System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q)${sep}System.Threading.CancellationToken cancellationToken);
+
 #end     
 #end
     }
@@ -107,27 +116,29 @@ namespace Algorand.Algod
 #if ($q.api == $propFile.api)
        
 
-       /// <summary>$q.description</summary>
+       /// <summary>$str.formatDoc($q.description, "/// ")
+       /// </summary>
 #foreach( $parm in $q.allParams )
        /// <param name="$parm.propertyName">$parm.doc</param>
 #end
        /// <exception cref="ApiException">A server side error occurred.</exception>
        public System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q))
        {
-              return #mapQueryName($q.Name)Async(#queryToClientArgList($q),System.Threading.CancellationToken.None)
+              return #mapQueryName($q.Name)Async(#queryToClientArgList($q)${sep}System.Threading.CancellationToken.None);
        }
 
-       /// <summary>$q.description</summary>
+       /// <summary>>$str.formatDoc($q.description, "/// ")
+       /// </summary>
 #foreach( $parm in $q.allParams )
        /// <param name="$parm.propertyName">$parm.doc</param>
 #end
        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
        /// <exception cref="ApiException<ErrorResponse>">A server side error occurred.</exception>
-       public System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q), System.Threading.CancellationToken cancellationToken)
+       public async System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q)${sep}System.Threading.CancellationToken cancellationToken)
        {
 #foreach( $parm in $q.allParams )
 #if($parm.Required=="true")
-              if ($parm.propertyName == null) throw new System.ArgumentNullException("$parm.propertyName");
+              if ($str.kebabToCamel($parm.propertyName) == null) throw new System.ArgumentNullException("$str.kebabToCamel($parm.propertyName)");
 #end
 #end
               var urlBuilder_ = new System.Text.StringBuilder();
@@ -137,7 +148,7 @@ namespace Algorand.Algod
               urlBuilder_.Append("$q.path");
 #end              
 #foreach( $parm in $q.pathParameters )
-              urlBuilder_.Replace("{$parm.propertyName}", System.Uri.EscapeDataString(ConvertToString($parm.propertyName, System.Globalization.CultureInfo.InvariantCulture)));
+              urlBuilder_.Replace("{$parm.propertyName}", System.Uri.EscapeDataString(ConvertToString($str.kebabToCamel($parm.propertyName), System.Globalization.CultureInfo.InvariantCulture)));
 #end
 
               var client_ = _httpClient;
@@ -149,7 +160,7 @@ namespace Algorand.Algod
                      request_.Method = new System.Net.Http.HttpMethod("$q.method.toUpperCase()");
                      request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 #if($q.bodyParameters.size()>0)
-#if($q.Name=="RawTransaction" || $q.Name=="Dryrun") 
+#if($q.Name=="RawTransaction" || $q.Name=="TealDryrun") 
                      System.Net.Http.ByteArrayContent content_ = new System.Net.Http.ByteArrayContent(Encoder.EncodeToMsgPackOrdered($q.bodyParameters.get(0).propertyName));
                      content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/msgpack");
 #else
@@ -218,6 +229,64 @@ namespace Algorand.Algod
 
 #end
 #end
+
+       protected struct ObjectResponseResult<T>
+       {
+       public ObjectResponseResult(T responseObject, string responseText)
+       {
+              this.Object = responseObject;
+              this.Text = responseText;
+       }
+
+       public T Object { get; }
+
+       public string Text { get; }
+       }
+
+       public bool ReadResponseAsString { get; set; }
+
+       protected virtual async System.Threading.Tasks.Task<ObjectResponseResult<T>> ReadObjectResponseAsync<T>(System.Net.Http.HttpResponseMessage response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Threading.CancellationToken cancellationToken)
+       {
+       if (response == null || response.Content == null)
+       {
+              return new ObjectResponseResult<T>(default(T), string.Empty);
+       }
+
+       if (ReadResponseAsString)
+       {
+              var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+              try
+              {
+              var typedBody = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
+              return new ObjectResponseResult<T>(typedBody, responseText);
+              }
+              catch (Newtonsoft.Json.JsonException exception)
+              {
+              var message = "Could not deserialize the response body string as " + typeof(T).FullName + ".";
+              throw new ApiException(message, (int)response.StatusCode, responseText, headers, exception);
+              }
+       }
+       else
+       {
+              try
+              {
+              using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+              using (var streamReader = new System.IO.StreamReader(responseStream))
+              using (var jsonTextReader = new Newtonsoft.Json.JsonTextReader(streamReader))
+              {
+                     var serializer = Newtonsoft.Json.JsonSerializer.Create(JsonSerializerSettings);
+                     var typedBody = serializer.Deserialize<T>(jsonTextReader);
+                     return new ObjectResponseResult<T>(typedBody, string.Empty);
+              }
+              }
+              catch (Newtonsoft.Json.JsonException exception)
+              {
+              var message = "Could not deserialize the response body stream as " + typeof(T).FullName + ".";
+              throw new ApiException(message, (int)response.StatusCode, string.Empty, headers, exception);
+              }
+       }
+       }
+
        private string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
        {
               if (value == null)
@@ -261,7 +330,7 @@ namespace Algorand.Algod
 
               var result = System.Convert.ToString(value, cultureInfo);
               return result == null ? "" : result;
-              }
+              
        }
 
     }
