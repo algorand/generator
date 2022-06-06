@@ -2,6 +2,7 @@
 namespace $propFile.namespace
 {
 
+using Algorand.Algod.Model.Transactions;
 using System = global::System;
 #set($accessibility="public")
 #set($className=$def.name)
