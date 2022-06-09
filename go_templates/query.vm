@@ -131,16 +131,18 @@ UNHANDLED TYPE
 #set( $processedPath = """${q.path}""" )
 #if( $str.matches($q.path, ".*\{.*}.*") )
 #set( $processedPath = "fmt.Sprintf(""" )
-#set( $argList = "" )
+#set( $argList = ", common.EscapeParams(" )
+#set( $sep = "" )
 #foreach( $part in $q.pathParts )
 #if ( $part.matches("\{.*}") )
-#set( $processedPath = "${processedPath}/%v" )
-#set( $argList = "$argList, s.${str.kebabToCamel($str.unwrap($part))}" )
+#set( $processedPath = "${processedPath}/%s" )
+#set( $argList = "${argList}${sep}s.${str.kebabToCamel($str.unwrap($part))}" )
+#set( $sep = ", " )
 #else
 #set( $processedPath = "${processedPath}/$part" )
 #end
 #end
-#set( $processedPath = "${processedPath}""$argList)" )
+#set( $processedPath = "${processedPath}""$argList)...)" )
 #end
 ## Return types are not consistent so manually add in the inconsistent functions...
 #if( $queryType == "PendingTransactionsByAddress" )
