@@ -29,10 +29,10 @@ function my_exit {
   exit $1
 }
 
-ALGOD_SPEC=/home/will/go/src/github.com/algorand/go-algorand/daemon/algod/api/algod.oas2.json
-INDEXER_SPEC=/home/will/algorand/indexer/api/indexer.oas2.json
-SDK_DIR=/home/will/algorand/js-algorand-sdk
-TEMPLATE_DIR=/home/will/algorand/generator/typescript_templates
+ALGOD_SPEC=/Users/igor/projects/go-algorand/daemon/algod/api/algod.oas2.json
+INDEXER_SPEC=/Users/igor/projects/indexer/api/indexer.oas2.json
+SDK_DIR=~/projects/js-algorand-sdk
+TEMPLATE_DIR=~/projects/generator/typescript_templates
 
 while [ "$1" != "" ]; do
     case "$1" in

@@ -22,6 +22,7 @@ import (
 #end
 #if( $str.matches($q.path, ".*\{.*}.*") )
   "fmt"
+  "net/url"
 #end
 #if ( $queryType == "SendRawTransaction" )
   "strings"
@@ -135,7 +136,7 @@ UNHANDLED TYPE
 #foreach( $part in $q.pathParts )
 #if ( $part.matches("\{.*}") )
 #set( $processedPath = "${processedPath}/%v" )
-#set( $argList = "$argList, s.${str.kebabToCamel($str.unwrap($part))}" )
+#set( $argList = "$argList, url.QueryEscape(fmt.Sprintf(""%v"", s.${str.kebabToCamel($str.unwrap($part))}))" )
 #else
 #set( $processedPath = "${processedPath}/$part" )
 #end
@@ -147,7 +148,7 @@ UNHANDLED TYPE
 func (s *PendingTransactionsByAddress) Do(ctx context.Context, headers ...*common.Header) (total uint64, topTransactions []types.SignedTxn, err error) {
   s.p.Format = "msgpack"
   response := models.PendingTransactionsResponse{}
-  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions/pending", s.address), s.p, headers)
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/accounts/%s/transactions/pending", url.QueryEscape(s.address)), s.p, headers)
   total = response.TotalTransactions
   topTransactions = response.TopTransactions
   return
@@ -155,7 +156,7 @@ func (s *PendingTransactionsByAddress) Do(ctx context.Context, headers ...*commo
 #elseif( $queryType == "PendingTransactionInformation" )
 func (s *PendingTransactionInformation) Do(ctx context.Context, headers ...*common.Header) (response models.PendingTransactionInfoResponse, stxn types.SignedTxn, err error) {
   s.p.Format = "msgpack"
-  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/transactions/pending/%s", s.txid), s.p, headers)
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/transactions/pending/%s", url.QueryEscape(s.txid)), s.p, headers)
   stxn = response.Transaction
   return
 }
@@ -171,7 +172,7 @@ func (s *PendingTransactions) Do(ctx context.Context, headers ...*common.Header)
 #elseif( $queryType == "LookupAccountByID" )
 func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Account, err error) {
   response := models.AccountResponse{}
-  err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", s.accountId), s.p, headers)
+  err = s.c.get(ctx, &response, fmt.Sprintf("/v2/accounts/%s", url.QueryEscape(s.accountId)), s.p, headers)
   validRound = response.CurrentRound
   result = response.Account
   return
@@ -179,7 +180,7 @@ func (s *LookupAccountByID) Do(ctx context.Context, headers ...*common.Header) (
 #elseif( $queryType == "LookupAssetByID" )
 func (s *LookupAssetByID) Do(ctx context.Context, headers ...*common.Header) (validRound uint64, result models.Asset, err error) {
   response := models.AssetResponse{}
-  err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%d", s.assetId), s.p, headers)
+  err = s.c.get(ctx, &response, fmt.Sprintf("/v2/assets/%s", url.QueryEscape(fmt.Sprintf("%d", s.assetId))), s.p, headers)
   validRound = response.CurrentRound
   result = response.Asset
   return
@@ -189,7 +190,7 @@ func (s *Block) Do(ctx context.Context, headers ...*common.Header) (result types
   var response models.BlockResponse
 
   s.p.Format = "msgpack"
-  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%d", s.round), s.p, headers)
+  err = s.c.getMsgpack(ctx, &response, fmt.Sprintf("/v2/blocks/%s", url.QueryEscape(fmt.Sprintf("%d", s.round))), s.p, headers)
   if err != nil {
     return
   }
