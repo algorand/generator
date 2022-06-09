@@ -132,16 +132,16 @@ UNHANDLED TYPE
 #if( $str.matches($q.path, ".*\{.*}.*") )
 #set( $processedPath = "fmt.Sprintf(""" )
 #set( $argList = ", common.EscapeParams(" )
+#set( $sep = "" )
 #foreach( $part in $q.pathParts )
 #if ( $part.matches("\{.*}") )
 #set( $processedPath = "${processedPath}/%s" )
-#set( $argList = "${argList}s.${str.kebabToCamel($str.unwrap($part))}, " )
+#set( $argList = "${argList}${sep}s.${str.kebabToCamel($str.unwrap($part))}" )
+#set( $sep = ", " )
 #else
 #set( $processedPath = "${processedPath}/$part" )
 #end
 #end
-#set( $index = $argList.length() - 2 )
-#set( $argList = $argList.substring(0, $index) )
 #set( $processedPath = "${processedPath}""$argList)...)" )
 #end
 ## Return types are not consistent so manually add in the inconsistent functions...
