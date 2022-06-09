@@ -134,7 +134,7 @@ UNHANDLED TYPE
 #set( $argList = ", common.EscapeParams(" )
 #foreach( $part in $q.pathParts )
 #if ( $part.matches("\{.*}") )
-#set( $processedPath = "${processedPath}/%v" )
+#set( $processedPath = "${processedPath}/%s" )
 #set( $argList = "${argList}s.${str.kebabToCamel($str.unwrap($part))}, " )
 #else
 #set( $processedPath = "${processedPath}/$part" )
