@@ -30,9 +30,11 @@ function my_exit {
   exit $1
 }
 
-ALGOD_SPEC=/Users/igor/projects/go-algorand/daemon/algod/api/algod.oas2.json
-INDEXER_SPEC=/Users/igor/projects/indexer/api/indexer.oas2.json
-SDK_DIR=~/projects/java-algorand-sdk
+INDEXER_SPEC=""
+ALGOD_SPEC=""
+#ALGOD_SPEC=/home/will/go/src/github.com/algorand/go-algorand/daemon/algod/api/algod.oas2.json
+#INDEXER_SPEC=/home/will/algorand/indexer/api/indexer.oas2.json
+SDK_DIR=/home/will/algorand/java-algorand-sdk
 
 while [ "$1" != "" ]; do
     case "$1" in

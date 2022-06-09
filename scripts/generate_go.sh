@@ -14,10 +14,10 @@ function help() {
   exit
 }
 
-ALGOD_SPEC=/Users/igor/projects/go-algorand/daemon/algod/api/algod.oas2.json
-SDK_DIR=/Users/igor/projects/go-algorand-sdk
-TEMPLATE_DIR=/Users/igor/projects/generator/go_templates
-INDEXER_SPEC=/Users/igor/projects/indexer/api/indexer.oas2.json
+ALGOD_SPEC=/home/will/go/src/github.com/algorand/go-algorand/daemon/algod/api/algod.oas2.json
+INDEXER_SPEC=/home/will/algorand/indexer/api/indexer.oas2.json
+SDK_DIR=/home/will/go/src/github.com/algorand/go-algorand-sdk
+TEMPLATE_DIR=/home/will/algorand/generator/go_templates
 
 PARAMS=""
 
