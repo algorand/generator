@@ -150,7 +150,15 @@ namespace Algorand.Algod
 #foreach( $parm in $q.pathParameters )
               urlBuilder_.Replace("{$parm.propertyName}", System.Uri.EscapeDataString(ConvertToString($str.kebabToCamel($parm.propertyName), System.Globalization.CultureInfo.InvariantCulture)));
 #end
-
+#foreach( $parm in $q.queryParameters )
+              if ($str.kebabToCamel($parm.propertyName) != null)
+              {
+                     urlBuilder_.Append(System.Uri.EscapeDataString("$parm.propertyName") + "=").Append(System.Uri.EscapeDataString(ConvertToString($str.kebabToCamel($parm.propertyName), System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+              }
+#end            
+#if($q.queryParameters.size()>0)
+              urlBuilder_.Length--;
+#end   
               var client_ = _httpClient;
               var disposeClient_ = false;
               try
