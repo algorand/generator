@@ -63,6 +63,7 @@ namespace Algorand.Algod
     using System.Collections.Generic;
     using System.IO;
     using System = global::System;
+    using Newtonsoft.Msgpack;
 
 
     public partial interface I${str.capitalize($propFile.api)}Api
@@ -262,31 +263,57 @@ namespace Algorand.Algod
 
        if (ReadResponseAsString)
        {
-              var responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+              string responseText;
+                if (response.Content.Headers.ContentType.MediaType == "application/msgpack")
+                {
+                    using (MessagePackReader reader = new MessagePackReader(await response.Content.ReadAsStreamAsync().ConfigureAwait(false)))
+                    {
+                        responseText = reader.ReadAsString();
+                    }
+                }
+                else
+                {
+                    responseText = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                }
+                
               try
               {
-              var typedBody = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
-              return new ObjectResponseResult<T>(typedBody, responseText);
+                     var typedBody = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
+                     return new ObjectResponseResult<T>(typedBody, responseText);
               }
               catch (Newtonsoft.Json.JsonException exception)
               {
-              var message = "Could not deserialize the response body string as " + typeof(T).FullName + ".";
-              throw new ApiException(message, (int)response.StatusCode, responseText, headers, exception);
+                     var message = "Could not deserialize the response body string as " + typeof(T).FullName + ".";
+                     throw new ApiException(message, (int)response.StatusCode, responseText, headers, exception);
               }
        }
        else
        {
-              try
-              {
-              using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-              using (var streamReader = new System.IO.StreamReader(responseStream))
-              using (var jsonTextReader = new Newtonsoft.Json.JsonTextReader(streamReader))
-              {
-                     var serializer = Newtonsoft.Json.JsonSerializer.Create(JsonSerializerSettings);
-                     var typedBody = serializer.Deserialize<T>(jsonTextReader);
-                     return new ObjectResponseResult<T>(typedBody, string.Empty);
-              }
-              }
+                 try
+                {
+                    if (response.Content.Headers.ContentType.MediaType == "application/msgpack")
+                    {
+                        using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                        using (var reader = new MessagePackReader(responseStream))
+                        {
+                            var serializer = Newtonsoft.Json.JsonSerializer.Create(JsonSerializerSettings);
+                            var typedBody = serializer.Deserialize<T>(reader);
+                            return new ObjectResponseResult<T>(typedBody, string.Empty);
+                        }
+                    }
+                    else
+                    {
+                        using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                        using (var streamReader = new System.IO.StreamReader(responseStream))
+                        using (var jsonTextReader = new Newtonsoft.Json.JsonTextReader(streamReader))
+                        {
+                            var serializer = Newtonsoft.Json.JsonSerializer.Create(JsonSerializerSettings);
+                            var typedBody = serializer.Deserialize<T>(jsonTextReader);
+                            return new ObjectResponseResult<T>(typedBody, string.Empty);
+                        }
+                    }
+                                      
+                }
               catch (Newtonsoft.Json.JsonException exception)
               {
               var message = "Could not deserialize the response body stream as " + typeof(T).FullName + ".";
