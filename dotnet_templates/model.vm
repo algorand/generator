@@ -1,8 +1,11 @@
 
 namespace $propFile.namespace
 {
+#if($propFile.indexer)
+#else
+    using Algorand.Algod.Model.Transactions;
+#end
 
-using Algorand.Algod.Model.Transactions;
 using System = global::System;
 #set($accessibility="public")
 #set($className=$def.name)
@@ -65,7 +68,7 @@ public partial class $className{
 #elseif ($prop.arrayType && $prop.arrayType=="PendingTransactionResponse")
   #set( $propType = "IReturnableTransaction" )   
 #elseif ($prop.arrayType && $prop.format == "byte")
-    #set( $propType = "byte[]" )   
+    #set( $propType = "byte[]" )
 #elseif ($prop.type == "string" && $prop.format == "byte")
     #set( $propType = "byte[]" ) 
 #elseif( $prop.type == "string" || $prop.arrayType == "string" )
@@ -74,6 +77,8 @@ public partial class $className{
     #set( $propType = "byte[]" )    
 #elseif( $prop.type == "address" )
     #set( $propType = "Address" )
+#elseif( $prop.arrayType  && $prop.arrayType == "integer")
+    #set( $propType = "ulong" )
 #elseif( $prop.arrayType  && $prop.arrayType != "")
     #set( $propType = $prop.arrayType )
 #elseif( $prop.refType  && $prop.refType != "")

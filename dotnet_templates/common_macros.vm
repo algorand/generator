@@ -83,7 +83,7 @@ UNHANDLED TYPE
 
 #macro ( queryParamToArgDef $param )
 #if ($param.propertyName=="format") Format? format#else
-#typeConverter($param, false)$propType? $str.kebabToCamel($param.propertyName)#end
+#typeConverter($param, false)$propType? $str.kebabToCamel($param.propertyName)=null#end
 #end
 
 #macro ( bodyParamToArgDef $param )#typeConverter($param, true)$propType $str.kebabToCamel($param.propertyName)#end

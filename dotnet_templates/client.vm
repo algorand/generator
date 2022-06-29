@@ -16,6 +16,18 @@ $sep#queryParamToArgDef($p)
 #set( $sep = ", " )
 #end
 #end
+## Given a query print the arg list to the function.
+#macro( queryToClientArgsFixedSep $query )
+#foreach( $p in $query.pathParameters )
+,#pathParamToArgDef($p)
+#end
+#foreach( $p in $query.bodyParameters )
+,#bodyParamToArgDef($p)
+#end
+#foreach( $p in $query.queryParameters )
+,#queryParamToArgDef($p)
+#end
+#end
 ## Given a query print the struct initialization.
 #macro( queryToStructInit $query )
 &${queryType}{c: c##
@@ -27,6 +39,7 @@ $sep#queryParamToArgDef($p)
 #end
 }
 #end
+## Arg list for a call
 #macro( queryToClientArgList $query )
 #set( $sep = "" )
 #foreach( $p in $query.pathParameters )
@@ -37,6 +50,18 @@ $sep$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
 #end
 #foreach( $p in $query.queryParameters )
 $sep$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
+#end
+#end
+## Arg list for a call
+#macro( queryToClientArgListFixedSep $query )
+#foreach( $p in $query.pathParameters )
+,$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
+#end
+#foreach( $p in $query.bodyParameters )
+,$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
+#end
+#foreach( $p in $query.queryParameters )
+,$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
 #end
 #end
 ## Given a query print the struct initialization.
@@ -55,11 +80,17 @@ $sep$str.kebabToCamel($p.propertyName)#set( $sep = ", " )
 Transactions#else
 $queryName#end
 #end
+#if($propFile.indexer)
+namespace Algorand.Indexer
+{
+    using Algorand.Indexer.Model;
+#else
 namespace Algorand.Algod
 {
-    using Algorand.Utils;
     using Algorand.Algod.Model;
     using Algorand.Algod.Model.Transactions;
+#end
+    using Algorand.Utils;
     using System.Collections.Generic;
     using System.IO;
     using System = global::System;
@@ -73,16 +104,16 @@ namespace Algorand.Algod
        /// <summary>$str.formatDoc($q.description, "/// ")
        /// </summary>
 #foreach( $parm in $q.allParams )
-       /// <param name="$parm.propertyName">$parm.doc</param>
+       /// <param name="$parm.propertyName">$str.formatDoc($parm.doc, "/// ")</param>
 #end
        /// <exception cref="ApiException<ErrorResponse>">A server side error occurred.</exception>
        System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q));
 
 #foreach( $parm in $q.allParams )
-       /// <param name="$parm.propertyName">$parm.doc</param>
+       /// <param name="$parm.propertyName">$str.formatDoc($parm.doc, "/// ")</param>
 #end
        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-       System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q)${sep}System.Threading.CancellationToken cancellationToken);
+       System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(System.Threading.CancellationToken cancellationToken#queryToClientArgsFixedSep($q));
 
 #end     
 #end
@@ -120,22 +151,22 @@ namespace Algorand.Algod
        /// <summary>$str.formatDoc($q.description, "/// ")
        /// </summary>
 #foreach( $parm in $q.allParams )
-       /// <param name="$parm.propertyName">$parm.doc</param>
+       /// <param name="$parm.propertyName">$str.formatDoc($parm.doc, "/// ")</param>
 #end
        /// <exception cref="ApiException">A server side error occurred.</exception>
        public System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q))
        {
-              return #mapQueryName($q.Name)Async(#queryToClientArgList($q)${sep}System.Threading.CancellationToken.None);
+              return #mapQueryName($q.Name)Async(System.Threading.CancellationToken.None#queryToClientArgListFixedSep($q));
        }
 
        /// <summary>>$str.formatDoc($q.description, "/// ")
        /// </summary>
 #foreach( $parm in $q.allParams )
-       /// <param name="$parm.propertyName">$parm.doc</param>
+       /// <param name="$parm.propertyName">$str.formatDoc($parm.doc, "/// ")</param>
 #end
        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
        /// <exception cref="ApiException<ErrorResponse>">A server side error occurred.</exception>
-       public async System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(#queryToClientArgs($q)${sep}System.Threading.CancellationToken cancellationToken)
+       public async System.Threading.Tasks.Task<#returnType($q)> #mapQueryName($q.Name)Async(System.Threading.CancellationToken cancellationToken#queryToClientArgsFixedSep($q))
        {
 #foreach( $parm in $q.allParams )
 #if($parm.Required=="true")
@@ -182,7 +213,7 @@ namespace Algorand.Algod
                     PrepareRequest(client_, request_, urlBuilder_);
 
                     var url_ = urlBuilder_.ToString();
-                    if (url_.StartsWith("/")) { url_ = url_.Remove(0); }
+                    if (url_.StartsWith("/")) { url_ = url_.Remove(0,1); }
                     request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
 
                     PrepareRequest(client_, request_, url_);
