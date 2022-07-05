@@ -3,7 +3,7 @@ FROM golang:1.17.9-bullseye
 ARG GITHUB_CLI_URL="https://github.com/cli/cli/releases/download/v1.8.1/gh_1.8.1_linux_amd64.tar.gz"
 
 # Manually install npm
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y maven openjdk-17-jdk nodejs
 
