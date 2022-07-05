@@ -311,7 +311,7 @@ public class GoGenerator implements Subscriber {
         this.modelWriter.newModel(
                 new StructDef(this.currentQueryName + "Params",
                         "defines parameters for " + this.currentQueryName,
-                        null, null, null),
+                        null, null, null,null),
                 this.modelsFilePrefix + "filtermodels", "models");
 
         // Add the entry into the applicationClient file

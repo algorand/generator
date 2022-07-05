@@ -15,17 +15,19 @@ public class QueryDef {
     final public String description;
     final public String method;
     final public List<String> contentType;
+    final public List<String> tags;
     final public List<TypeDef> queryParameters = new ArrayList<>();
     final public List<TypeDef> pathParameters = new ArrayList<>();
     final public List<TypeDef> bodyParameters = new ArrayList<>();
 
-    public QueryDef(String name, String returnType, String path, String description, String method, List<String> contentType) {
+    public QueryDef(String name, String returnType, String path, String description, String method, List<String> contentType, List<String> tags) {
         this.name = name;
         this.returnType = returnType;
         this.path = path;
         this.description = description;
         this.method = method;
         this.contentType = contentType;
+        this.tags = tags;
     }
 
     @Override
@@ -35,7 +37,9 @@ public class QueryDef {
                 + ", return type: " + this.returnType
                 + ", path: " + this.path
                 + ", description: " + this.description
-                + ", method: " + this.method;
+                + ", method: " + this.method
+                + ", api: " + this.getApi();
+
     }
 
     public List<String> getPathParts() {
@@ -74,6 +78,10 @@ public class QueryDef {
     public String getName() {
         return name;
     }
+
+    public String getApi() {  if (tags == null || tags.isEmpty()) { return "default"; } else  { return tags.get(0);} }
+
+    public List<String> getTags() { return tags; }
 
     public String getReturnType() {
         return returnType;

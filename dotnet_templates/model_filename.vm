@@ -1,0 +1,13 @@
+#set( $skip = $propFile.model_skip.split(",") )
+#if ( ! $skip.contains($def.name) )
+#set($fileName=$def.name)
+#if($fileName=="PendingTransactionResponse")
+#set($fileName="ReturnedTransaction")
+#elseif($fileName=="PendingTransactionsResponse")
+#set($fileName="PendingTransactions")
+#elseif($fileName=="BlockResponse")
+#set($fileName="CertifiedBlock")
+#end
+${fileName}.generated.cs
+#end
+

@@ -1,0 +1,109 @@
+
+namespace $propFile.namespace
+{
+#if($propFile.indexer)
+#else
+    using Algorand.Algod.Model.Transactions;
+#end
+
+using System = global::System;
+#set($accessibility="public")
+#set($className=$def.name)
+#if($className=="PendingTransactionResponse")
+#set($className="ReturnedTransaction")
+#set($accessibility="internal")
+#elseif($className=="PendingTransactionsResponse")
+#set($className="PendingTransactions")
+#elseif($className=="BlockResponse")
+#set($className="CertifiedBlock")
+#end
+
+
+#if($!def.parentType && $!def.parentType != "" )
+public partial class $className : $!def.parentType{
+#else
+public partial class $className{
+#end
+#foreach( $prop in $props )
+#if( $prop.required)
+
+    [Newtonsoft.Json.JsonProperty("$prop.propertyName", Required = Newtonsoft.Json.Required.Always)]
+    [System.ComponentModel.DataAnnotations.Required]
+#else
+    [Newtonsoft.Json.JsonProperty("$prop.propertyName", Required = Newtonsoft.Json.Required.Default,  NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+#end
+#if (!$prop.algorandLongNameAlias || $prop.algorandLongNameAlias=="")
+    #set( $propName = $str.kebabToUpperCamel($prop.propertyName) )
+#else
+    #set( $propName = $str.kebabToUpperCamel($prop.algorandLongNameAlias) )
+#end
+#if ($className == "Account" && $prop.propertyName=="address") 
+    #set( $propType = "Address" )
+#elseif ( $prop.type == "PendingTransactionResponse" )
+    #set( $propType = "IReturnableTransaction" )
+#elseif ( $prop.algorandFormat == "SignedTransaction" )
+    #set( $propType = "SignedTransaction" )
+#elseif ( $prop.algorandFormat == "Transaction" )
+    #set( $propType = "Transaction" )
+#elseif ( $prop.algorandFormat == "Address" )
+    #set( $propType = "Address" )
+#elseif ( $prop.algorandFormat == "TEALProgram" )
+    #set( $propType = "TEALProgram" )
+#elseif ( $prop.algorandFormat == "BlockHeader" )
+    #set( $propType = "Block" )    
+#elseif ( $prop.type == "integer" )
+#if($prop.required)
+    #set( $propType = "ulong" )
+#else
+    #set( $propType = "ulong?" )
+#end
+#elseif( $prop.type == "binary" )
+    #set( $propType = "byte[]" )
+#elseif( $prop.type == "boolean" )
+#if($prop.required)
+    #set( $propType = "bool" )   
+#else
+    #set( $propType = "bool?" )
+#end
+#elseif ($prop.arrayType && $prop.arrayType=="PendingTransactionResponse")
+  #set( $propType = "IReturnableTransaction" )   
+#elseif ($prop.arrayType && $prop.format == "byte")
+    #set( $propType = "byte[]" )
+#elseif ($prop.type == "string" && $prop.format == "byte")
+    #set( $propType = "byte[]" ) 
+#elseif( $prop.type == "string" || $prop.arrayType == "string" )
+    #set( $propType = "string" )             
+#elseif( $prop.type == "object" )
+    #set( $propType = "byte[]" )    
+#elseif( $prop.type == "address" )
+    #set( $propType = "Address" )
+#elseif( $prop.arrayType  && $prop.arrayType == "integer")
+    #set( $propType = "ulong" )
+#elseif( $prop.arrayType  && $prop.arrayType != "")
+    #set( $propType = $prop.arrayType )
+#elseif( $prop.refType  && $prop.refType != "")
+    #set( $propType = $prop.refType )    
+#else
+    UNHANDLED TYPE **
+- name: $!propName
+- ref: $!prop.refType
+- type: $!prop.type
+- array type: $!prop.arrayType
+- algorand format: $!prop.algorandFormat
+- format: $!prop.format
+- prop: $prop
+$unknown.type ## force a template failure with an unknown type
+#end
+#if( $prop.arrayType && $prop.arrayType != "")
+    public System.Collections.Generic.ICollection<$propType> $propName {get;set;} = new System.Collections.ObjectModel.Collection<$propType>();
+
+#else
+    public $propType $propName {get;set;}
+
+#end
+#end
+    
+}
+
+
+}
