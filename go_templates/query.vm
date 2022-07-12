@@ -242,11 +242,11 @@ func (s *SuggestedParams) Do(ctx context.Context, headers ...*common.Header) (pa
 #elseif( $queryType == "TealCompile" )## TODO: "post" can be generated, there is nothing special here.
 func (s *TealCompile) Do(ctx context.Context, headers ...*common.Header) (response models.CompileResponse, err error) {
   vals, err := query.Values(s.p)
-	if err != nil {
-		return
-	}
+  if err != nil {
+    return
+  }
 
-	err = s.c.post(ctx, &response, fmt.Sprintf("/v2/teal/compile?%s", vals.Encode()), s.source, headers)
+  err = s.c.post(ctx, &response, fmt.Sprintf("/v2/teal/compile?%s", vals.Encode()), s.source, headers)
   return
 }
 #elseif( $queryType == "TealDryrun" )## TODO: "post" can be generated, there is nothing special here.

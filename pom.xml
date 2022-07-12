@@ -39,7 +39,7 @@
         <maven.surefire.version>3.0.0-M5</maven.surefire.version>
 
         <!-- Test sources at 1.8 to allow using JUnit5 -->
-        <java.version>14</java.version>
+        <java.version>11</java.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -220,7 +220,7 @@
               <artifactId>maven-compiler-plugin</artifactId>
               <version>3.8.1</version>
               <configuration>
-                  <release>14</release>
+                  <release>11</release>
               </configuration>
           </plugin>
           <plugin>
