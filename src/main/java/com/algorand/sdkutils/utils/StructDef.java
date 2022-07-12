@@ -14,15 +14,17 @@ public class StructDef implements Comparable<StructDef> {
     public List<TypeDef> properties = new ArrayList<>();
     public Set<String> requiredProperties = new HashSet<>();
     public Set<String> mutuallyExclusiveProperties = new HashSet<>();
+    public String parentType;
 
     public StructDef(String name, String aliasOf) {
         this.name = name;
         this.aliasOf = aliasOf;
     }
 
-    public StructDef(String name, String doc, List<TypeDef> properties, Set<String> requiredProperties, Set<String> mutuallyExclusiveProperties) {
+    public StructDef(String name, String doc, List<TypeDef> properties, Set<String> requiredProperties, Set<String> mutuallyExclusiveProperties, String parentType) {
         this.name = name;
         this.doc = doc;
+        this.parentType=parentType;
         if (properties != null) {
             this.properties = properties;
         }
@@ -32,6 +34,8 @@ public class StructDef implements Comparable<StructDef> {
         if (mutuallyExclusiveProperties != null) {
             this.mutuallyExclusiveProperties = mutuallyExclusiveProperties;
         }
+
+
     }
 
     public Set<String> getUniqueTypes() {
@@ -48,6 +52,7 @@ public class StructDef implements Comparable<StructDef> {
     @Override
     public String toString() {
         return "{name: '" + name + "', " +
+                "parent: '" + parentType + "', " +
                 "aliasOf: '" + aliasOf + "', " +
                 "doc: '" + doc + "', " +
                 "properties: " + properties.size() + ", " +
@@ -72,6 +77,10 @@ public class StructDef implements Comparable<StructDef> {
 
     public String getDoc() {
         return doc;
+    }
+
+    public String getParentType() {
+        return parentType;
     }
 
     public List<TypeDef> getProperties() {

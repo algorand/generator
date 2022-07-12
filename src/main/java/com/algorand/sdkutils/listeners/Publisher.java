@@ -14,6 +14,9 @@ public class Publisher {
     public enum Events {
         ALL,
 
+        // Store an enum definition--some languages will just treat enums as strings.
+        ENUM_DEFINITION,
+
         // Define a model object.
         NEW_MODEL,
         NEW_PROPERTY,

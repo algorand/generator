@@ -1,0 +1,1236 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "AlgodProxy",
+    "version": "v1"
+  },
+  "paths": {
+    
+  },
+  "components": {
+    "schemas": {
+      "Algorand.Address": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Bytes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.Algod.Model.AssetParams": {
+        "type": "object",
+        "properties": {
+          "c": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Clawback"
+          },
+          "clawback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "clawback"
+          },
+          "creator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "creator"
+          },
+          "dc": {
+            "maximum": 19,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "x-algorand-longname": "Decimals"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int64",
+            "writeOnly": true,
+            "x-algorand-longname": "decimals"
+          },
+          "df": {
+            "type": "boolean",
+            "default": false,
+            "nullable": true,
+            "x-algorand-longname": "DefaultFrozen"
+          },
+          "default-frozen": {
+            "type": "boolean",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "defaultFrozen"
+          },
+          "f": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Freeze"
+          },
+          "freeze": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "freeze"
+          },
+          "m": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Manager"
+          },
+          "manager": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "manager"
+          },
+          "am": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "MetadataHash"
+          },
+          "metadata-hash": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "metadataHash"
+          },
+          "an": {
+            "type": "string",
+            "nullable": true,
+            "x-algorand-longname": "Name"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "name"
+          },
+          "name-b64": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "nameB64"
+          },
+          "r": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Reserve"
+          },
+          "reserve": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "reserve"
+          },
+          "t": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "Total"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "total"
+          },
+          "un": {
+            "type": "string",
+            "nullable": true,
+            "x-algorand-longname": "UnitName"
+          },
+          "unit-name": {
+            "type": "string",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "unitName"
+          },
+          "unit-name-b64": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "unitNameB64"
+          },
+          "au": {
+            "type": "string",
+            "nullable": true,
+            "x-algorand-longname": "Url"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "url"
+          },
+          "url-b64": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "urlB64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationCallTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true,
+            "x-algorand-longname": "type"
+          },
+          "apat": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Algorand.Address"
+            },
+            "nullable": true,
+            "x-algorand-longname": "Accounts"
+          },
+          "apaa": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            },
+            "nullable": true,
+            "x-algorand-longname": "ApplicationArgs"
+          },
+          "apfa": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true,
+            "x-algorand-longname": "ForeignApps"
+          },
+          "apas": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true,
+            "x-algorand-longname": "ForeignAssets"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationClearStateTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationCallTransaction"
+          }
+        ],
+        "properties": {
+          "apid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-algorand-longname": "ApplicationId"
+          },
+          "apan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnCompletion"
+              }
+            ],
+            "readOnly": true,
+            "x-algorand-longname": "OnCompletion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationCloseOutTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationCallTransaction"
+          }
+        ],
+        "properties": {
+          "apid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ApplicationId"
+          },
+          "apan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnCompletion"
+              }
+            ],
+            "readOnly": true,
+            "x-algorand-longname": "OnCompletion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationCreateTransaction": {
+        "required": [
+          "apap",
+          "apgs",
+          "apls",
+          "apsu"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationNoopTransaction"
+          }
+        ],
+        "properties": {
+          "apap": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.TEALProgram"
+              }
+            ],
+            "x-algorand-longname": "ApprovalProgram"
+          },
+          "apsu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.TEALProgram"
+              }
+            ],
+            "x-algorand-longname": "ClearStateProgram"
+          },
+          "apgs": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StateSchema"
+              }
+            ],
+            "x-algorand-longname": "GlobalStateSchema"
+          },
+          "apls": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StateSchema"
+              }
+            ],
+            "x-algorand-longname": "LocalStateSchema"
+          },
+          "apep": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ExtraProgramPages"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationDeleteTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationCallTransaction"
+          }
+        ],
+        "properties": {
+          "apid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ApplicationId"
+          },
+          "apan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnCompletion"
+              }
+            ],
+            "readOnly": true,
+            "x-algorand-longname": "OnCompletion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationNoopTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationCallTransaction"
+          }
+        ],
+        "properties": {
+          "apid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ApplicationId"
+          },
+          "apan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnCompletion"
+              }
+            ],
+            "readOnly": true,
+            "x-algorand-longname": "OnCompletion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationOptInTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationCallTransaction"
+          }
+        ],
+        "properties": {
+          "apid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ApplicationId"
+          },
+          "apan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnCompletion"
+              }
+            ],
+            "readOnly": true,
+            "x-algorand-longname": "OnCompletion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationUpdateTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApplicationCallTransaction"
+          }
+        ],
+        "properties": {
+          "apid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ApplicationId"
+          },
+          "apan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnCompletion"
+              }
+            ],
+            "readOnly": true,
+            "x-algorand-longname": "OnCompletion"
+          },
+          "apap": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.TEALProgram"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "ApprovalProgram"
+          },
+          "apsu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.TEALProgram"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "ClearStateProgram"
+          },
+          "apgs": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StateSchema"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "GlobalStateSchema"
+          },
+          "apls": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StateSchema"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "LocalStateSchema"
+          },
+          "apep": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "ExtraProgramPages"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetAcceptTransaction": {
+        "required": [
+          "arcv"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetMovementsTransaction"
+          }
+        ],
+        "properties": {
+          "arcv": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "x-algorand-longname": "AssetReceiver"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetChangeTransaction": {
+        "required": [
+          "caid"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetConfigurationTransaction"
+          }
+        ],
+        "properties": {
+          "caid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-algorand-longname": "AssetIndex"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetClawbackTransaction": {
+        "required": [
+          "aamt",
+          "arcv",
+          "asnd"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetMovementsTransaction"
+          }
+        ],
+        "properties": {
+          "aamt": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-algorand-longname": "AssetAmount"
+          },
+          "asnd": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "x-algorand-longname": "AssetSender"
+          },
+          "arcv": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "x-algorand-longname": "AssetReceiver"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetConfigurationTransaction": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "readOnly": true,
+            "x-algorand-longname": "type"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetCreateTransaction": {
+        "required": [
+          "apar"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetConfigurationTransaction"
+          }
+        ],
+        "properties": {
+          "apar": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Algod.Model.AssetParams"
+              }
+            ],
+            "x-algorand-longname": "AssetParams"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetDestroyTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetChangeTransaction"
+          }
+        ],
+        "additionalProperties": false
+      },
+      "AssetFreezeTransaction": {
+        "required": [
+          "fadd",
+          "faid",
+          "type"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "readOnly": true,
+            "x-algorand-longname": "type"
+          },
+          "fadd": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "x-algorand-longname": "FreezeTarget"
+          },
+          "faid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-algorand-longname": "AssetFreezeID"
+          },
+          "afrz": {
+            "type": "boolean",
+            "default": false,
+            "x-algorand-longname": "FreezeState"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetMovementsTransaction": {
+        "required": [
+          "type",
+          "xaid"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "readOnly": true,
+            "x-algorand-longname": "type"
+          },
+          "xaid": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-algorand-longname": "XferAsset"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetTransferTransaction": {
+        "required": [
+          "aamt",
+          "arcv"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetMovementsTransaction"
+          }
+        ],
+        "properties": {
+          "aamt": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-algorand-longname": "AssetAmount"
+          },
+          "arcv": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "x-algorand-longname": "AssetReceiver"
+          },
+          "aclose": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "AssetCloseTo"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetUpdateTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AssetChangeTransaction"
+          }
+        ],
+        "properties": {
+          "apar": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Algod.Model.AssetParams"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "AssetParams"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KeyRegisterOfflineTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/KeyRegistrationTransaction"
+          }
+        ],
+        "additionalProperties": false
+      },
+      "KeyRegisterOnlineTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/KeyRegistrationTransaction"
+          }
+        ],
+        "properties": {
+          "votekey": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.ParticipationPublicKey"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "VotePK"
+          },
+          "selkey": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.VRFPublicKey"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "SelectionPK"
+          },
+          "votefst": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "VoteFirst"
+          },
+          "votelst": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "VoteLast"
+          },
+          "votekd": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "VoteKeyDilution"
+          },
+          "nonpart": {
+            "type": "boolean",
+            "default": false,
+            "nullable": true,
+            "x-algorand-longname": "NonParticipation"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KeyRegistrationTransaction": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "readOnly": true,
+            "x-algorand-longname": "type"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OnCompletion": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "PaymentTransaction": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Transaction"
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true,
+            "x-algorand-longname": "type"
+          },
+          "amt": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "Amount"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "writeOnly": true,
+            "x-algorand-longname": "amount"
+          },
+          "rcv": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Receiver"
+          },
+          "close": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "CloseRemainderTo"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SignedTransaction": {
+        "type": "object",
+        "properties": {
+          "txn": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Transaction"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Tx"
+          },
+          "sig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Signature"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Sig"
+          },
+          "msig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.MultisigSignature"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "MSig"
+          },
+          "lsig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.LogicsigSignature"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "LSig"
+          },
+          "sgnr": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "AuthAddr"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StateSchema": {
+        "type": "object",
+        "properties": {
+          "nui": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "NumUint"
+          },
+          "nbs": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "NumByteSlice"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "snd": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Sender"
+          },
+          "fee": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "Fee"
+          },
+          "fv": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "FirstValid"
+          },
+          "lv": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "nullable": true,
+            "x-algorand-longname": "LastValid"
+          },
+          "note": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Note"
+          },
+          "gen": {
+            "type": "string",
+            "default": "",
+            "nullable": true,
+            "x-algorand-longname": "GenesisID"
+          },
+          "gh": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Digest"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "GenesisHash"
+          },
+          "grp": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Digest"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Group"
+          },
+          "lx": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Lease"
+          },
+          "rekey": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Address"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "RekeyTo"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.Digest": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Bytes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.LogicsigSignature": {
+        "type": "object",
+        "properties": {
+          "l": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Logic"
+          },
+          "arg": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            },
+            "nullable": true,
+            "x-algorand-longname": "Args"
+          },
+          "sig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Signature"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Sig"
+          },
+          "msig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.MultisigSignature"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "Msig"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.MultisigSignature": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "format": "int32",
+            "x-algorand-longname": "Version"
+          },
+          "thr": {
+            "type": "integer",
+            "format": "int32",
+            "x-algorand-longname": "Threshold"
+          },
+          "subsig": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Algorand.MultisigSubsig"
+            },
+            "nullable": true,
+            "x-algorand-longname": "Subsigs"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.MultisigSubsig": {
+        "type": "object",
+        "properties": {
+          "pk": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Org.BouncyCastle.Crypto.Parameters.Ed25519PublicKeyParameters"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "key"
+          },
+          "s": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Algorand.Signature"
+              }
+            ],
+            "nullable": true,
+            "x-algorand-longname": "sig"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.ParticipationPublicKey": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Bytes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.Signature": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "readOnly": true,
+            "x-algorand-longname": "Bytes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.TEALProgram": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "readOnly": true,
+            "x-algorand-longname": "Bytes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Algorand.VRFPublicKey": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true,
+            "x-algorand-longname": "Bytes"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

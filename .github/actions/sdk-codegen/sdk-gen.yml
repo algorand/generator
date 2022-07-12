@@ -1,0 +1,9 @@
+name: "sdk-gen"
+description: "Uses models to run SDK code generation and cut a PR in case of changes."
+inputs:
+  sdk:
+    description: "Which SDK to generate."
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"

@@ -251,7 +251,7 @@ public class QueryMapperGenerator extends OpenApiParser {
     public static String getEnumClsssDef (String name, JsonNode node) {
         StringBuffer sb = new StringBuffer();
         String enumName = Tools.getCamelCase(name, true);
-        TypeDef enumType = getEnum(node, name, "", "", "", "", "", "");
+        TypeDef enumType = getEnum(node, name, "", "", "", "", "", "", "");
         sb.append("    public static " + enumType.javaTypeName + " get" + enumName + "(String val) {\n");
         sb.append("        switch(val.toUpperCase()) {\n");
         for (String val : enumType.enumValues) {

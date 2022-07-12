@@ -34,7 +34,8 @@ public class TypeDef {
             String openApiArrayType,
             String openApiFormat,
             String openApiAlgorandFormat,
-            String openApiAlgorandGoFormat) {
+            String openApiAlgorandGoFormat,
+            String openApiAlgorandLongNameAlias) {
         this.javaTypeName = javaTypeName;
         this.rawTypeName = rawTypeName;
         this.type = type;
@@ -47,6 +48,7 @@ public class TypeDef {
         this.openApiFormat = openApiFormat;
         this.openApiAlgorandFormat = openApiAlgorandFormat;
         this.openApiAlgorandGoFormat = openApiAlgorandGoFormat;
+        this.openApiAlgorandLongNameAlias = openApiAlgorandLongNameAlias;
         this.required = required;
     }    
     /**
@@ -77,7 +79,8 @@ public class TypeDef {
             String openApiFormat,
             String openApiAlgorandFormat,
             String openApiAlgorandGoFormat,
-            List<String> enumValues) {
+            List<String> enumValues,
+            String openApiAlgorandLongNameAlias) {
         this.javaTypeName = javaTypeName;
         this.rawTypeName = rawTypeName;
         this.type = type;
@@ -90,6 +93,7 @@ public class TypeDef {
         this.openApiFormat = openApiFormat;
         this.openApiAlgorandFormat = openApiAlgorandFormat;
         this.openApiAlgorandGoFormat = openApiAlgorandGoFormat;
+        this.openApiAlgorandLongNameAlias = openApiAlgorandLongNameAlias;
         this.enumValues = enumValues;
         this.required = required;
     }
@@ -132,6 +136,7 @@ public class TypeDef {
     public String openApiFormat;
     public String openApiAlgorandFormat;
     public String openApiAlgorandGoFormat;
+    public String openApiAlgorandLongNameAlias;
 
     // This field is private because it is sometimes (but usually not) a CSV and it's too easy to accidentally
     // use it the wrong way. Use 'isOfType' to compare against specific types.
@@ -186,6 +191,10 @@ public class TypeDef {
 
     public String getAlgorandFormat() {
         return openApiAlgorandFormat;
+    }
+
+    public String getAlgorandLongNameAlias() {
+        return openApiAlgorandLongNameAlias;
     }
 
     public String getAlgorandGoFormat() {
