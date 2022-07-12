@@ -20,7 +20,7 @@ import (
 #break
 #end
 #end
-#if( $str.matches($q.path, ".*\{.*}.*") )
+#if( $str.matches($q.path, ".*\{.*}.*") || $queryType == "TealCompile")
   "fmt"
 #end
 #if ( $queryType == "SendRawTransaction" )
