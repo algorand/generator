@@ -20,7 +20,7 @@ import (
 #break
 #end
 #end
-#if( $str.matches($q.path, ".*\{.*}.*") || $queryType == "TealCompile")
+#if( $str.matches($q.path, ".*\{.*}.*"))
   "fmt"
 #end
 #if ( $queryType == "SendRawTransaction" )
@@ -41,6 +41,7 @@ import (
   "github.com/algorand/go-algorand-sdk/types"
 #end
 #if ( $queryType == "TealCompile")
+  "fmt"
 	"github.com/google/go-querystring/query"
 #end
 #foreach( $qp in $q.bodyParameters)
