@@ -343,6 +343,7 @@ public class JavaGenerator implements Subscriber {
         BufferedWriter bw = Tools.getFileWriter("Enums", rootPath);
         try {
             bw.append("package " + pkg + ";\n\n");
+            bw.append("import com.fasterxml.jackson.annotation.JsonCreator;\n");
             bw.append("import com.fasterxml.jackson.annotation.JsonProperty;\n\n");
             bw.append("public class Enums {\n\n");
             Iterator<String> classes = enumDefinitions.keySet().iterator();
@@ -378,12 +379,10 @@ public class JavaGenerator implements Subscriber {
             String javaEnum = Tools.getCamelCase(val, true).toUpperCase();
             sb.append(javaEnum);
             sb.append("(\"" + val + "\")");
-            if (elmts.hasNext()) {
-                sb.append(",\n");
-            } else {
-                sb.append(";\n\n");
-            }
+            sb.append(",\n");
         }
+        sb.append(TAB + TAB + "@JsonProperty(\"\") UNKNOWN(\"\");\n\n");
+
         sb.append(TAB + TAB + "final String serializedName;\n");
         sb.append(TAB + TAB + javaTypeName + "(String name) {\n");
         sb.append(TAB + TAB + TAB + "this.serializedName = name;\n");
@@ -391,7 +390,17 @@ public class JavaGenerator implements Subscriber {
         sb.append(TAB + TAB + "@Override\n");
         sb.append(TAB + TAB + "public String toString() {\n");
         sb.append(TAB + TAB + TAB + "return this.serializedName;\n");
-        sb.append(TAB + TAB + "}\n");
+        sb.append(TAB + TAB + "}\n\n");
+
+        sb.append(TAB + TAB + "@JsonCreator\n");
+        sb.append(TAB + TAB + "public static " + javaTypeName + " forValue(String value) {\n");
+        sb.append(TAB + TAB + TAB + "for (" + javaTypeName + " t : values()) {\n");
+        sb.append(TAB + TAB + TAB + TAB + "if (t.serializedName.equalsIgnoreCase(value)) {\n");
+        sb.append(TAB + TAB + TAB + TAB + TAB + "return t;\n");
+        sb.append(TAB + TAB + TAB + TAB + "}\n");
+        sb.append(TAB + TAB + TAB + "}\n");
+        sb.append(TAB + TAB + TAB + "return UNKNOWN;\n");
+        sb.append(TAB + TAB + "}\n\n");
 
         sb.append(TAB + "}\n");
         javaTypeName = "Enums." + javaTypeName;
@@ -495,7 +504,7 @@ final class JavaQueryWriter {
 
         // Do not expose format property
         if (propType.javaTypeName.equals("Enums.Format")) {
-            if (!className.equals("AccountInformation") 
+            if (!className.equals("AccountInformation")
                     && !className.equals("AccountApplicationInformation")
                     && !className.equals("AccountAssetInformation")) {
                 // Don't set format to msgpack for AccountInformation
