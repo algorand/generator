@@ -381,7 +381,8 @@ public class JavaGenerator implements Subscriber {
             sb.append("(\"" + val + "\")");
             sb.append(",\n");
         }
-        sb.append(TAB + TAB + "@JsonProperty(\"\") UNKNOWN(\"\");\n\n");
+        String unknown = "UNKNOWN";
+        sb.append(TAB + TAB + "@JsonProperty(\"\") " + unknown + "(\"\");\n\n");
 
         sb.append(TAB + TAB + "final String serializedName;\n");
         sb.append(TAB + TAB + javaTypeName + "(String name) {\n");
@@ -399,7 +400,7 @@ public class JavaGenerator implements Subscriber {
         sb.append(TAB + TAB + TAB + TAB + TAB + "return t;\n");
         sb.append(TAB + TAB + TAB + TAB + "}\n");
         sb.append(TAB + TAB + TAB + "}\n");
-        sb.append(TAB + TAB + TAB + "return UNKNOWN;\n");
+        sb.append(TAB + TAB + TAB + "return " + unknown + ";\n");
         sb.append(TAB + TAB + "}\n\n");
 
         sb.append(TAB + "}\n");
