@@ -38,9 +38,30 @@ UNHANDLED TYPE
 #end
 #end
 
+#macro ( isBoxNameSpecialCase $queryType $queryParam )
+#if ( ( $queryType == "GetApplicationBoxByName" || $queryType == "LookupApplicationBoxByIDAndName" ) && $queryParam.propertyName == "name" )
+true##
+#else
+false##
+#end
+#end
+
+#macro ( queryParamType $param $setter )
+#if ( "#isBoxNameSpecialCase($queryType, $param)" == "true" )
+[]byte##
+#else
+#oapiToGo($param, $setter)##
+#end
+#end
+
 ## Name of function to set a parameter.
-#macro ( queryParamTypeName $param )
-$go.queryParamTypeNameMapper($queryType, $str.kebabToUpperCamel($param.propertyName).replace("Id", "ID"))##
+#macro ( queryParamTypeName $param $setter )
+#if ( $param.required && $setter )
+#set ( $propertyName = "$str.kebabToCamel($param.propertyName)" )
+#else
+#set ( $propertyName = "$str.kebabToUpperCamel($param.propertyName)" )
+#end
+$go.queryParamTypeNameMapper($queryType, $propertyName.replace("Id", "ID"))##
 #end
 
 #macro ( pathParamToArgDef $param )

@@ -56,6 +56,12 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*common.He
 
 ## Given a query print the arg list to the function.
 #macro( queryToClientArgs $query )
+#set ( $hasRequiredQueryParams = false )
+#foreach( $p in $query.queryParameters )
+#if ( $p.required )
+#set ( $hasRequiredQueryParams = true )
+#end
+#end
 #set( $sep = "" )
 #foreach( $p in $query.pathParameters )
 $sep#pathParamToArgDef($p)
@@ -65,9 +71,18 @@ $sep#pathParamToArgDef($p)
 $sep#bodyParamToArgDef($p)
 #set( $sep = ", " )
 #end
+#foreach( $p in $query.queryParameters )
+#if ( $p.required )
+$sep#queryParamTypeName($p, true) #queryParamType($p, true)##
+#set( $sep = ", " )
+#end
+#end
 #end
 ## Given a query print the struct initialization.
 #macro( queryToStructInit $query )
+#if ( $hasRequiredQueryParams )
+(##
+#end
 &${queryType}{c: c##
 #foreach( $p in $query.pathParameters )
 , $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
@@ -75,7 +90,15 @@ $sep#bodyParamToArgDef($p)
 #foreach( $p in $query.bodyParameters )
 , $str.kebabToCamel($p.propertyName): $str.kebabToCamel($p.propertyName)##
 #end
-}
+}##
+#if ( $hasRequiredQueryParams )
+)##
+#end
+#foreach( $p in $query.queryParameters )
+#if ( $p.required )
+.#queryParamTypeName($p, true)(#queryParamTypeName($p, true))##
+#end
+#end
 #end
 #foreach( $q in $queries )
 #set( $queryType = "$go.queryTypeMapper(${str.capitalize($q.name)})" )
