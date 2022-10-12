@@ -11,11 +11,11 @@ string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 BlockHeader##
 #elseif ( $param.algorandFormat == "uint64" )
-number | bigint##
+(number | bigint)##
 #elseif ( $param.type == "object" )
 Record<string, any>##
 #elseif ( $param.type == "integer" || $param.arrayType == "integer" )
-number | bigint##
+(number | bigint)##
 #elseif ( $param.type == "boolean" )
 boolean##
 #elseif( $param.type == "address" )
@@ -47,7 +47,37 @@ $unknown.type ## force a template failure with an unknown type
 #end
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array postfix to arrays...
 #end
-## Converts a parameter type into the SDK specific type.
+## Check if there's a class associated with this type
+#macro ( isClassType $param )
+#if ( $param.algorandFormat == "SignedTransaction" )
+false##
+#elseif ( $param.algorandFormat == "Address" )
+false##
+#elseif ( $param.algorandFormat == "BlockHeader" )
+false##
+#elseif ( $param.algorandFormat == "uint64" )
+false##
+#elseif ( $param.type == "object" )
+false##
+#elseif ( $param.type == "integer" || $param.arrayType == "integer" )
+false##
+#elseif ( $param.type == "boolean" )
+false##
+#elseif( $param.type == "address" )
+false##
+#elseif( $param.type == "binary" )
+false##
+#elseif($param.arrayType && $param.format == "byte")
+false##
+#elseif( $param.type == "string" && $param.format == "byte" )
+false##
+#elseif( $param.type == "string" || $param.arrayType == "string" )
+false##
+#else
+true##
+#end
+#end
+## Create an expression to assign a field in a constructor
 #macro ( constructorAssignType $prop )
 #set( $argType = "#toSdkType($prop, true)" )
 #set( $fieldType = "#toSdkType($prop, false)" )
@@ -65,6 +95,26 @@ UNHANDLED CONSTRUCTOR TYPE CONVERSION
 $unknown.type ## force a template failure with an unknown type
 #end
 #end
+## Create an expression to assign a field in the from_obj_for_encoding function
+#macro ( fromObjForEncodingAssignType $value $prop )
+#if ( "#isClassType($prop)" == "false" )
+$value##
+#elseif ( $prop.arrayType )
+#set ( $assignment = "${value}.map(${prop.arrayType}.from_obj_for_encoding)" )
+#if ($prop.required)
+$assignment##
+#else
+typeof $value !== 'undefined' ? $assignment : undefined##
+#end
+#else
+#set ( $assignment = "${prop.refType}.from_obj_for_encoding($value)" )
+#if ($prop.required)
+$assignment##
+#else
+typeof $value !== 'undefined' ? $assignment : undefined##
+#end
+#end
+#end
 #macro ( questionMarkIfOptional $param )
 #if ( ! $param.required )
 ?##
@@ -79,9 +129,11 @@ $unknown.type ## force a template failure with an unknown type
  */
 
 /* eslint-disable no-use-before-define */
-import BaseModel from './base';
+import BaseModel from '../../basemodel';
+#if ( $propFile.indexer == "false" )
 import { EncodedSignedTransaction } from '../../../../types/transactions/encoded';
 import BlockHeader from '../../../../types/blockHeader';
+#end
 
 #foreach( $modelEntry in $models.entrySet() )
 #set( $def = $modelEntry.key )
@@ -149,6 +201,37 @@ export class $def.name extends BaseModel {
       #paramName($prop): '$prop.propertyName',
 #end
     }
+  }
+
+  // eslint-disable-next-line camelcase
+  static from_obj_for_encoding(data: Record<string, any>): $def.name {
+    /* eslint-disable dot-notation */
+#set ( $d = "$" )## Create a variable in order to insert a $ into the code
+#foreach( $prop in $props )
+#if ($prop.required)
+#if ($prop.arrayType)
+    if (!Array.isArray(data['$prop.propertyName']))
+      throw new Error(`Response is missing required array field '${prop.propertyName}': ${d}{data}`);
+#else
+    if (typeof data['$prop.propertyName'] === 'undefined')
+      throw new Error(`Response is missing required field '${prop.propertyName}': ${d}{data}`);
+#end
+#end
+#end
+#if ($use_object_params)
+    return new ${def.name}({
+#foreach( $prop in $props )
+      #paramName($prop): #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop),
+#end
+    });
+#else
+    return new ${def.name}(
+#foreach( $prop in $props )
+      #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop),
+#end
+    );
+#end
+    /* eslint-enable dot-notation */
   }
 }
 
