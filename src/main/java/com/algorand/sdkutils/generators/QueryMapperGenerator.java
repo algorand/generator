@@ -130,7 +130,7 @@ public class QueryMapperGenerator extends OpenApiParser {
                 "            switch (property) {\n");
 
         JsonNode paramNode = path.getValue().findValue("parameters");
-        Iterator<Entry<String, JsonNode>> properties = getSortedParameters(paramNode);
+        Iterator<Entry<String, JsonNode>> properties = getSortedParameters(null, paramNode);
 
         // The parameters in the path are directly passed to the constructor.
         // The method with have in order arguments each assigned to the parameter in order. 
