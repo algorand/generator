@@ -14,10 +14,10 @@ function help() {
   exit
 }
 
-ALGOD_SPEC=/home/will/go/src/github.com/algorand/go-algorand/daemon/algod/api/algod.oas2.json
-INDEXER_SPEC=/home/will/algorand/indexer/api/indexer.oas2.json
-SDK_DIR=/home/will/go/src/github.com/algorand/go-algorand-sdk
-TEMPLATE_DIR=/home/will/algorand/generator/go_templates
+ALGOD_SPEC=~/go/src/github.com/algorand/go-algorand/daemon/algod/api/algod.oas2.json
+INDEXER_SPEC=~/go/src/github.com/algorand/indexer/api/indexer.oas2.json
+SDK_DIR=/Users/andrew/Desktop/projects/go-algorand-sdk
+TEMPLATE_DIR=/Users/andrew/go/src/github.com/algorand/generator/go_templates
 
 PARAMS=""
 
@@ -62,6 +62,9 @@ if [ -z $SKIP_BUILD ]; then
   # Build generator.
   mvn package
 fi
+
+# Clean previously (stale) generated files before regenerating them.
+rm -rf $SDK_DIR/client/v2/common/models/* $SDK_DIR/client/v2/algod/* $SDK_DIR/client/v2/indexer/*
 
 # Generate algod.
 java -jar target/generator-*-jar-with-dependencies.jar \
