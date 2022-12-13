@@ -256,6 +256,16 @@ func (s *TealDisassemble) Do(ctx context.Context, headers ...*common.Header) (re
   err = s.c.post(ctx, &response, "/v2/teal/disassemble", nil, headers, s.source)
   return
 }
+#elseif( $queryType == "UnsetSyncRound" )## TODO: "delete" can be generated, there is nothing special here.
+func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
+  err = s.c.delete(ctx, &response, $processedPath, nil, headers)
+  return
+}
+#elseif( $queryType == "SetSyncRound" )## TODO: "post" can be generated, there is nothing special here.
+func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
+  err = s.c.post(ctx, &response, $processedPath, nil, headers, nil)
+  return
+}
 #else## finally... machine generate the rest
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
   err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)

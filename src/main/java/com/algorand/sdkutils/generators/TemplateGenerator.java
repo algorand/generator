@@ -46,7 +46,7 @@ public class TemplateGenerator extends OpenApiParser {
             notes.append(pathString+"\n");
 
             JsonNode paramNode = path.getValue().findValue("parameters");
-            Iterator<Entry<String, JsonNode>> properties = getSortedParameters(paramNode);
+            Iterator<Entry<String, JsonNode>> properties = getSortedParameters(null, paramNode);
             bw.append(pathString + ", ");
             while (properties.hasNext()) {
                 Entry<String, JsonNode> parameter = properties.next();
