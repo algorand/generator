@@ -695,17 +695,17 @@ public class OpenApiParser {
                 
                 JsonNode tags = field.getValue().get("tags");
                 if (tags != null) {
-                    boolean isPrivate = false;
+                    boolean ignore = false;
                     Iterator<JsonNode> tagIter = tags.elements();
                     while (tagIter.hasNext()) {
                         JsonNode tag = tagIter.next();
                         String tagText = tag.asText();
                         if (tagText.equals("private") || tagText.equals("experimental")) {
-                            isPrivate = true;
+                            ignore = true;
                             break;
                         }
                     }
-                    if (isPrivate) {
+                    if (ignore) {
                         continue;
                     }
                 }
