@@ -458,6 +458,22 @@ public class OpenApiParser {
         return true;
     }
 
+    /**
+     * Check whether we should ignore a route, response, or definition based on the value of one of
+     * its tags.
+     * 
+     * You should call this method to check every tag related to a node. If this returns true for
+     * any tag, that node should be ignored.
+     * @param tagText The String value of its tag
+     * @return Whether the object should be ignored based on this tag
+     */
+    static boolean shouldIgnoreTag(String tagText) {
+        if (tagText.equals("private") || tagText.equals("experimental")) {
+            return true;
+        }
+        return false;
+    }
+
     // Query parameters need be in builder methods.
     // processQueryParameters do all the processing of the parameters.
     void processQueryParams(
@@ -582,8 +598,7 @@ public class OpenApiParser {
                         Iterator<JsonNode> tagIter = tags.elements();
                         while (tagIter.hasNext()) {
                             JsonNode tag = tagIter.next();
-                            String tagText = tag.asText();
-                            if (tagText.equals("private") || tagText.equals("experimental")) {
+                            if (shouldIgnoreTag(tag.asText())) {
                                 ignore = true;
                                 break;
                             }
@@ -633,8 +648,7 @@ public class OpenApiParser {
                         Iterator<JsonNode> tagIter = tags.elements();
                         while (tagIter.hasNext()) {
                             JsonNode tag = tagIter.next();
-                            String tagText = tag.asText();
-                            if (tagText.equals("private") || tagText.equals("experimental")) {
+                            if (shouldIgnoreTag(tag.asText())) {
                                 ignore = true;
                                 break;
                             }
@@ -699,8 +713,7 @@ public class OpenApiParser {
                     Iterator<JsonNode> tagIter = tags.elements();
                     while (tagIter.hasNext()) {
                         JsonNode tag = tagIter.next();
-                        String tagText = tag.asText();
-                        if (tagText.equals("private") || tagText.equals("experimental")) {
+                        if (shouldIgnoreTag(tag.asText())) {
                             ignore = true;
                             break;
                         }
