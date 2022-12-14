@@ -578,16 +578,17 @@ public class OpenApiParser {
                 for (Map.Entry<String, JsonNode> cls : getSortedSchema(schemas).entrySet()) {
                     JsonNode tags = cls.getValue().get("tags");
                     if (tags != null) {
-                        boolean isPrivate = false;
+                        boolean ignore = false;
                         Iterator<JsonNode> tagIter = tags.elements();
                         while (tagIter.hasNext()) {
                             JsonNode tag = tagIter.next();
-                            if (tag.asText().equals("private")) {
-                                isPrivate = true;
+                            String tagText = tag.asText();
+                            if (tagText.equals("private") || tagText.equals("experimental")) {
+                                ignore = true;
                                 break;
                             }
                         }
-                        if (isPrivate) {
+                        if (ignore) {
                             continue;
                         }
                     }
@@ -628,16 +629,17 @@ public class OpenApiParser {
 
                     JsonNode tags = rtype.getValue().get("tags");
                     if (tags != null) {
-                        boolean isPrivate = false;
+                        boolean ignore = false;
                         Iterator<JsonNode> tagIter = tags.elements();
                         while (tagIter.hasNext()) {
                             JsonNode tag = tagIter.next();
-                            if (tag.asText().equals("private")) {
-                                isPrivate = true;
+                            String tagText = tag.asText();
+                            if (tagText.equals("private") || tagText.equals("experimental")) {
+                                ignore = true;
                                 break;
                             }
                         }
-                        if (isPrivate) {
+                        if (ignore) {
                             continue;
                         }
                     }
@@ -697,7 +699,8 @@ public class OpenApiParser {
                     Iterator<JsonNode> tagIter = tags.elements();
                     while (tagIter.hasNext()) {
                         JsonNode tag = tagIter.next();
-                        if (tag.asText().equals("private")) {
+                        String tagText = tag.asText();
+                        if (tagText.equals("private") || tagText.equals("experimental")) {
                             isPrivate = true;
                             break;
                         }
