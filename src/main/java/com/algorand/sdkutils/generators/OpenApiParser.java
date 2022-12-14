@@ -458,6 +458,22 @@ public class OpenApiParser {
         return true;
     }
 
+    /**
+     * Check whether we should ignore a route, response, or definition based on the value of one of
+     * its tags.
+     * 
+     * You should call this method to check every tag related to a node. If this returns true for
+     * any tag, that node should be ignored.
+     * @param tagText The String value of its tag
+     * @return Whether the object should be ignored based on this tag
+     */
+    static boolean shouldIgnoreTag(String tagText) {
+        if (tagText.equals("private") || tagText.equals("experimental")) {
+            return true;
+        }
+        return false;
+    }
+
     // Query parameters need be in builder methods.
     // processQueryParameters do all the processing of the parameters.
     void processQueryParams(
@@ -578,16 +594,16 @@ public class OpenApiParser {
                 for (Map.Entry<String, JsonNode> cls : getSortedSchema(schemas).entrySet()) {
                     JsonNode tags = cls.getValue().get("tags");
                     if (tags != null) {
-                        boolean isPrivate = false;
+                        boolean ignore = false;
                         Iterator<JsonNode> tagIter = tags.elements();
                         while (tagIter.hasNext()) {
                             JsonNode tag = tagIter.next();
-                            if (tag.asText().equals("private")) {
-                                isPrivate = true;
+                            if (shouldIgnoreTag(tag.asText())) {
+                                ignore = true;
                                 break;
                             }
                         }
-                        if (isPrivate) {
+                        if (ignore) {
                             continue;
                         }
                     }
@@ -628,16 +644,16 @@ public class OpenApiParser {
 
                     JsonNode tags = rtype.getValue().get("tags");
                     if (tags != null) {
-                        boolean isPrivate = false;
+                        boolean ignore = false;
                         Iterator<JsonNode> tagIter = tags.elements();
                         while (tagIter.hasNext()) {
                             JsonNode tag = tagIter.next();
-                            if (tag.asText().equals("private")) {
-                                isPrivate = true;
+                            if (shouldIgnoreTag(tag.asText())) {
+                                ignore = true;
                                 break;
                             }
                         }
-                        if (isPrivate) {
+                        if (ignore) {
                             continue;
                         }
                     }
@@ -693,16 +709,16 @@ public class OpenApiParser {
                 
                 JsonNode tags = field.getValue().get("tags");
                 if (tags != null) {
-                    boolean isPrivate = false;
+                    boolean ignore = false;
                     Iterator<JsonNode> tagIter = tags.elements();
                     while (tagIter.hasNext()) {
                         JsonNode tag = tagIter.next();
-                        if (tag.asText().equals("private")) {
-                            isPrivate = true;
+                        if (shouldIgnoreTag(tag.asText())) {
+                            ignore = true;
                             break;
                         }
                     }
-                    if (isPrivate) {
+                    if (ignore) {
                         continue;
                     }
                 }
