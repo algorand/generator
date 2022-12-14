@@ -21,8 +21,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Print Java Version
-      run: java --version
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '16'
+        distribution: 'temurin'
+        cache: maven
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
