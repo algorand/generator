@@ -314,28 +314,44 @@ public class OpenApiParser {
     }
 
     // Returns an iterator in sorted order of the parameters (json nodes).
-    Iterator<Entry<String, JsonNode>> getSortedParameters(JsonNode properties) {
+    Iterator<Entry<String, JsonNode>> getSortedParameters(JsonNode pathParams, JsonNode methodParams) {
         TreeMap<String, JsonNode> tm = new TreeMap<String, JsonNode>();
-        if (properties == null) {
-            return tm.entrySet().iterator();
+        List<JsonNode> paramNodes = new ArrayList<>();
+
+        if (pathParams != null) {
+            if (!pathParams.isArray()) {
+                throw new IllegalArgumentException("Expected node to be an array, but got: " + pathParams.getNodeType());
+            }
+
+            Iterator<JsonNode> elements = pathParams.elements();
+            while (elements.hasNext()) {
+                paramNodes.add(elements.next());
+            }
         }
 
-        if (properties.isArray()) {
-            ArrayNode jsonArrayNode = (ArrayNode) properties;
-            for (int i = 0; i < jsonArrayNode.size(); i++) {
-                JsonNode node = jsonArrayNode.get(i);
-                JsonNode typeNode = null;
-                if (node.get("$ref") != null) {
-                    typeNode = this.getFromRef(node.get("$ref").asText());
-                } else {
-                    typeNode = node;
-                }
-                tm.put(typeNode.get("name").asText(), typeNode);
+        if (methodParams != null) {
+            if (!methodParams.isArray()) {
+                throw new IllegalArgumentException("Expected node to be an array, but got: " + methodParams.getNodeType());
             }
-            Iterator<Entry<String, JsonNode>>sortedParams = tm.entrySet().iterator();
-            return sortedParams;
+
+            Iterator<JsonNode> elements = methodParams.elements();
+            while (elements.hasNext()) {
+                paramNodes.add(elements.next());
+            }
         }
-        return null;
+
+        for (JsonNode node : paramNodes) {
+            JsonNode typeNode = null;
+            if (node.get("$ref") != null) {
+                typeNode = this.getFromRef(node.get("$ref").asText());
+            } else {
+                typeNode = node;
+            }
+            tm.put(typeNode.get("name").asText(), typeNode);
+        }
+
+        Iterator<Entry<String, JsonNode>> sortedParams = tm.entrySet().iterator();
+        return sortedParams;
     }
 
     // Extract a list of required properties from a parent node
@@ -442,6 +458,22 @@ public class OpenApiParser {
         return true;
     }
 
+    /**
+     * Check whether we should ignore a route, response, or definition based on the value of one of
+     * its tags.
+     * 
+     * You should call this method to check every tag related to a node. If this returns true for
+     * any tag, that node should be ignored.
+     * @param tagText The String value of its tag
+     * @return Whether the object should be ignored based on this tag
+     */
+    static boolean shouldIgnoreTag(String tagText) {
+        if (tagText.equals("private") || tagText.equals("experimental")) {
+            return true;
+        }
+        return false;
+    }
+
     // Query parameters need be in builder methods.
     // processQueryParameters do all the processing of the parameters.
     void processQueryParams(
@@ -485,16 +517,8 @@ public class OpenApiParser {
 
     // Write the class of a path expression
     // This is the root method for preparing the complete class
-    void writeQueryClass(
-            JsonNode spec,
-            String path) throws IOException {
-
-        String httpMethod;
-        Iterator<String> fields = spec.fieldNames();
-        httpMethod = fields.next();
-        spec = spec.get(httpMethod);
-
-        String className = spec.get("operationId").asText();
+    void writeQueryClass(String path, JsonNode pathParams, String httpMethod, JsonNode spec, String operationId) throws IOException {
+        String className = operationId;
 
         /*
          * TODO: this is a bug: function name should start with a small letter.
@@ -532,7 +556,7 @@ public class OpenApiParser {
         logger.debug("Generating ... {}", className);
         Iterator<Entry<String, JsonNode>> properties = null;
         if ( paramNode != null) {
-            properties = getSortedParameters(paramNode);
+            properties = getSortedParameters(pathParams, paramNode);
         }
 
         List<String> contentTypes = new ArrayList<>();
@@ -568,6 +592,22 @@ public class OpenApiParser {
         JsonNode schemas = root.get("components") !=
                 null ? root.get("components").get("schemas") : root.get("definitions");
                 for (Map.Entry<String, JsonNode> cls : getSortedSchema(schemas).entrySet()) {
+                    JsonNode tags = cls.getValue().get("tags");
+                    if (tags != null) {
+                        boolean ignore = false;
+                        Iterator<JsonNode> tagIter = tags.elements();
+                        while (tagIter.hasNext()) {
+                            JsonNode tag = tagIter.next();
+                            if (shouldIgnoreTag(tag.asText())) {
+                                ignore = true;
+                                break;
+                            }
+                        }
+                        if (ignore) {
+                            continue;
+                        }
+                    }
+
                     String desc = null;
                     if (cls.getValue().get("description") != null) {
                         desc = cls.getValue().get("description").asText();
@@ -582,6 +622,7 @@ public class OpenApiParser {
                         // If it has no properties, no class is needed for this type.
                         continue;
                     }
+
                     String className = Tools.getCamelCase(cls.getKey(), true);
                     if (!filterList.isEmpty() && filterList.contains(className)) {
                         continue;
@@ -600,6 +641,23 @@ public class OpenApiParser {
                 Iterator<Entry<String, JsonNode>> returnTypes = returns.fields();
                 while (returnTypes.hasNext()) {
                     Entry<String, JsonNode> rtype = returnTypes.next();
+
+                    JsonNode tags = rtype.getValue().get("tags");
+                    if (tags != null) {
+                        boolean ignore = false;
+                        Iterator<JsonNode> tagIter = tags.elements();
+                        while (tagIter.hasNext()) {
+                            JsonNode tag = tagIter.next();
+                            if (shouldIgnoreTag(tag.asText())) {
+                                ignore = true;
+                                break;
+                            }
+                        }
+                        if (ignore) {
+                            continue;
+                        }
+                    }
+
                     JsonNode rSchema = null;
                     if (rtype.getValue().has("content")) {
                         rSchema = rtype.getValue().get("content").get("application/json").get("schema");
@@ -639,17 +697,43 @@ public class OpenApiParser {
         Iterator<Entry<String, JsonNode>> pathIter = paths.fields();
         while (pathIter.hasNext()) {
             Entry<String, JsonNode> path = pathIter.next();
-            JsonNode privateTag = path.getValue().get("post") !=
-                    null ? path.getValue().get("post").get("tags") : null;
-                    if (privateTag != null && privateTag.elements().next().asText().equals("private")) {
+            JsonNode pathParams = path.getValue().get("parameters");
+
+            Iterator<Entry<String, JsonNode>> fieldIter = path.getValue().fields();
+            while (fieldIter.hasNext()) {
+                Entry<String, JsonNode> field = fieldIter.next();
+
+                if (field.getKey().equals("parameters")) {
+                    continue;
+                }
+                
+                JsonNode tags = field.getValue().get("tags");
+                if (tags != null) {
+                    boolean ignore = false;
+                    Iterator<JsonNode> tagIter = tags.elements();
+                    while (tagIter.hasNext()) {
+                        JsonNode tag = tagIter.next();
+                        if (shouldIgnoreTag(tag.asText())) {
+                            ignore = true;
+                            break;
+                        }
+                    }
+                    if (ignore) {
                         continue;
                     }
-                    String className = Tools.getCamelCase(
-                            path.getValue().get(path.getValue().fieldNames().next()).get("operationId").asText(), true);
-                    if (!filterList.isEmpty() && filterList.contains(className)) {
-                        continue;
-                    }
-                    writeQueryClass(path.getValue(), path.getKey());
+                }
+
+                JsonNode operationId = field.getValue().get("operationId");
+                if (operationId == null) {
+                    throw new IllegalArgumentException(String.format("Path %s with method %s has no operationId", path.getKey(), field.getKey()));
+                }
+                String className = Tools.getCamelCase(operationId.asText(), true);
+                if (!filterList.isEmpty() && filterList.contains(className)) {
+                    continue;
+                }
+
+                writeQueryClass(path.getKey(), pathParams, field.getKey(), field.getValue(), operationId.asText());
+            }
         }
     }
 
