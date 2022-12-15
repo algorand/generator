@@ -66,9 +66,9 @@ fi
 # Clean previously (stale) generated files before regenerating them.
 # Some files are hand-written instead of generated, so preserve those files here.
 find $SDK_DIR/client/v2/common/models/* $SDK_DIR/client/v2/algod/* $SDK_DIR/client/v2/indexer/* \
+  \! -name 'account_error_response.go' \
   \! -name 'blockRaw.go' \
   \! -name 'dryrun.go' \
-  \! -name 'account_error_response.go' \
   \! -name 'shim.go' \
   -delete
 
