@@ -79,6 +79,14 @@ if [ -z $SKIP_BUILD ]; then
   mvn package
 fi
 
+# Clean previously (stale) generated files before regenerating them.
+# Hand-written files are confined to algosdk/v2/client/common,
+# except AlgodClient, which will be re-generated according to the specs. 
+find $SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/model/* \
+     $SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/algod/* \
+     $SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/indexer/* \
+     -delete
+
 java -jar target/generator-*-jar-with-dependencies.jar \
        java \
        -c  "$SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/common" \
