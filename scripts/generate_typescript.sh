@@ -77,6 +77,9 @@ if [ -z $SKIP_BUILD ]; then
   mvn package
 fi
 
+# Clean previously (stale) generated files before regenerating them.
+find $SDK_DIR/src/client/v2/algod/models/* $SDK_DIR/src/client/v2/indexer/models/* -delete
+
 java -jar target/generator-*-jar-with-dependencies.jar \
       template \
       -s "$ALGOD_SPEC" \
