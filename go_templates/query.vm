@@ -33,16 +33,16 @@ import (
 #end
 #end
 
-  "github.com/algorand/go-algorand-sdk/client/v2/common"
+  "github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 #if ( $returnType.contains("model") )
-  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+  "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 #end
-#if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" )
-  "github.com/algorand/go-algorand-sdk/types"
+#if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" || $queryType == "GetLedgerStateDelta" )
+  "github.com/algorand/go-algorand-sdk/v2/types"
 #end
 #foreach( $qp in $q.bodyParameters)
 #if( $str.matches("#oapiToGo($qp)", "models\..*") )
-  "github.com/algorand/go-algorand-sdk/encoding/msgpack"
+  "github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 #end
 #end
 )
@@ -264,6 +264,11 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
 #elseif( $queryType == "SetSyncRound" )## TODO: "post" can be generated, there is nothing special here.
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
   err = s.c.post(ctx, &response, $processedPath, nil, headers, nil)
+  return
+}
+##elseif( $queryType == "GetLedgerStateDelta" )
+func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response types.LedgerStateDelta, err error) {
+  err = s.c.getMsgpack(ctx, &response, $processedPath, $queryArg, headers)
   return
 }
 #else## finally... machine generate the rest

@@ -4,11 +4,11 @@ package $propFile.query_package
 import (
   "context"
 
-  "github.com/algorand/go-algorand-sdk/client/v2/common"
+  "github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 #foreach( $q in $queries )
 ## TODO: Something like: $str.matches("#oapiToGo($qp)", "model\..*")
 #if ( "$go.queryTypeMapper(${str.capitalize($q.name)})" == "TealDryrun" )
-  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+  "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 #end
 #end
 )
