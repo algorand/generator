@@ -33,16 +33,16 @@ import (
 #end
 #end
 
-  "github.com/algorand/go-algorand-sdk/client/v2/common"
+  "github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 #if ( $returnType.contains("model") )
-  "github.com/algorand/go-algorand-sdk/client/v2/common/models"
+  "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 #end
 #if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" )
-  "github.com/algorand/go-algorand-sdk/types"
+  "github.com/algorand/go-algorand-sdk/v2/types"
 #end
 #foreach( $qp in $q.bodyParameters)
 #if( $str.matches("#oapiToGo($qp)", "models\..*") )
-  "github.com/algorand/go-algorand-sdk/encoding/msgpack"
+  "github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 #end
 #end
 )

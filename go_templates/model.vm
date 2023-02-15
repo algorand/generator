@@ -48,7 +48,7 @@ package $propFile.model_package;
 #set( $hasTypes = false )
 #foreach( $param in $def.properties )
 #if( $str.matches("#toSdkType($param)", "(\[])?types\..*") )
-import "github.com/algorand/go-algorand-sdk/types"
+import "github.com/algorand/go-algorand-sdk/v2/types"
 #break
 #set( $hasTypes = true )
 #end
