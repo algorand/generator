@@ -271,6 +271,11 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
   err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
   return
 }
+#elseif( $queryType == "SetBlockTimeStampOffset" )## TODO: "post" can be generated, there is nothing special here.
+func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
+  err = s.c.post(ctx, &response, $processedPath, nil, headers, nil)
+  return
+}
 #else## finally... machine generate the rest
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
   err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
