@@ -723,6 +723,8 @@ final class JavaQueryWriter {
             Tools.addImport(imports, "com.algorand.algosdk.v2.client.model.DryrunRequest");
             Tools.addImport(imports, "com.fasterxml.jackson.core.JsonProcessingException");
             return "Encoder.encodeToMsgPack("+propName+")";
+        case "SimulateRequest":
+            Tools.addImport(imports, "com.algorand.algosdk.v2.client.model.SimulateRequest");
         default:
             return propName;
         }
