@@ -278,17 +278,6 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
 }
 #elseif( $queryType == "SimulateTransaction" )
 func (s *SimulateTransaction) Do(ctx context.Context, headers ...*common.Header) (response models.SimulateResponse, err error) {
-  // Set default Content-Type, if the user didn't specify it.
-  addContentType := true
-  for _, header := range headers {
-    if strings.ToLower(header.Key) == "content-type" {
-      addContentType = false
-      break
-    }
-  }
-  if addContentType {
-    headers = append(headers, &common.Header{"Content-Type", "application/x-binary"})
-  }
   err = s.c.post(ctx, &response, "/v2/transactions/simulate", s.p, headers, s.request)
   return
 }
