@@ -23,7 +23,7 @@ import (
 #if( $str.matches($q.path, ".*\{.*}.*") )
   "fmt"
 #end
-#if ( $queryType == "SendRawTransaction" || $queryType == "SimulateTransaction"  )
+#if ( $queryType == "SendRawTransaction" )
   "strings"
 #end
 #foreach( $qp in $q.queryParameters)
