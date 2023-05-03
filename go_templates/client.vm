@@ -3,6 +3,7 @@ package $propFile.query_package
 
 import (
   "context"
+  "net/http"
 
   "github.com/algorand/go-algorand-sdk/v2/client/v2/common"
 #foreach( $q in $queries )
@@ -57,6 +58,14 @@ func MakeClientWithHeaders(address string, apiToken string, headers []*common.He
        commonClientWithHeaders, err := common.MakeClientWithHeaders(address, authHeader, apiToken, headers)
        c = (*Client)(commonClientWithHeaders)
        return
+}
+
+// MakeClientWithTransport is the factory for constructing a Client for a given endpoint with a
+// custom HTTP Transport as well as optional additional user defined headers.
+func MakeClientWithTransport(address string, apiToken string, headers []*common.Header, transport http.RoundTripper) (c *Client, err error) {
+	commonClientWithTransport, err := common.MakeClientWithTransport(address, authHeader, apiToken, headers, transport)
+	c = (*Client)(commonClientWithTransport)
+	return
 }
 
 ## Given a query print the arg list to the function.
