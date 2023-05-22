@@ -34,10 +34,10 @@ import (
 #end
 
   "github.com/algorand/go-algorand-sdk/v2/client/v2/common"
-#if ( $returnType.contains("model") && $queryType != "GetLedgerStateDelta" && $queryType != "GetLedgerStateDeltaForTransactionGroup" && $queryType != "GetTransactionGroupLedgerStateDeltasForRound" )
+#if ( $returnType.contains("model") && $queryType != "GetLedgerStateDelta" && $queryType != "GetLedgerStateDeltaForTransactionGroup" )
   "github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 #end
-#if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" || $queryType == "GetLedgerStateDelta" || $queryType == "GetLedgerStateDeltaForTransactionGroup" || $queryType == "GetTransactionGroupLedgerStateDeltasForRound" )
+#if ( $queryType == "PendingTransactionsByAddress" || $queryType == "PendingTransactionInformationByAddress" || $queryType == "PendingTransactionInformation" || $queryType == "PendingTransactions" || $queryType == "Block" || $queryType == "SuggestedParams" || $queryType == "GetLedgerStateDelta" || $queryType == "GetLedgerStateDeltaForTransactionGroup" )
   "github.com/algorand/go-algorand-sdk/v2/types"
 #end
 #foreach( $qp in $q.bodyParameters)
@@ -272,11 +272,6 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
   return
 }
 #elseif( $queryType == "GetLedgerStateDeltaForTransactionGroup" )
-func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response types.LedgerStateDelta, err error) {
-  err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
-  return
-}
-#elseif( $queryType == "GetTransactionGroupLedgerStateDeltasForRound" )
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response types.LedgerStateDelta, err error) {
   err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
   return
