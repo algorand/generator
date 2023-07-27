@@ -85,7 +85,7 @@ true##
 #if ( $argType == $fieldType )
 $name##
 #elseif ( $argType == "string | Uint8Array" && $fieldType == "Uint8Array" )
-typeof $name === 'string' ? new Uint8Array(Buffer.from($name, 'base64')) : $name##
+typeof $name === 'string' ? base64ToBytes($name) : $name##
 #else
 UNHANDLED CONSTRUCTOR TYPE CONVERSION
 - property: $prop
@@ -129,12 +129,12 @@ typeof $value !== 'undefined' ? $assignment : undefined##
  */
 
 /* eslint-disable no-use-before-define */
-import { Buffer } from 'buffer';
-import BaseModel from '../../basemodel';
+import { base64ToBytes } from '../../../../encoding/binarydata';
 #if ( $propFile.indexer == "false" )
-import { EncodedSignedTransaction } from '../../../../types/transactions/encoded';
 import BlockHeader from '../../../../types/blockHeader';
+import { EncodedSignedTransaction } from '../../../../types/transactions/encoded';
 #end
+import BaseModel from '../../basemodel';
 
 #foreach( $modelEntry in $models.entrySet() )
 #set( $def = $modelEntry.key )
