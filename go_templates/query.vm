@@ -59,6 +59,8 @@ type ${paramsType} struct {
   // $str.formatDoc("$qpName ${str.uncapitalize($qp.doc)}", "  // ")
   #if ( $qp.arrayType == "string" )
     $qpName []string `url:"$qp.propertyName,omitempty,comma"`
+  #elseif ( $qpName == "CurrencyGreaterThan")
+    $qpName *uint64 `url:"$qp.propertyName,omitempty"`
   #else
     $qpName #oapiToGo($qp, false) `url:"$qp.propertyName,omitempty"`
   #end
@@ -114,7 +116,11 @@ func (s *$queryType) ${qpName}($qpName #queryParamType($qp, true)) *$queryType {
 #elseif( $qp.algorandFormat == "base64" )
   s.p.$qpFieldName = base64.StdEncoding.EncodeToString($qpName)
 #elseif ( $qp.type == "integer" || $qp.type == "string" || $qp.type == "boolean" || $qp.arrayType )
-  s.p.$qpFieldName = $qpName
+  #if ( $qpFieldName == "CurrencyGreaterThan")
+    s.p.$qpFieldName = &$qpName
+  #else
+    s.p.$qpFieldName = $qpName
+  #end
 #else
 UNHANDLED TYPE
 - ref: $!qp.refType
