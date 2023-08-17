@@ -11,11 +11,19 @@ string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 BlockHeader##
 #elseif ( $param.algorandFormat == "uint64" )
+#if ( $isArgType )
 (number | bigint)##
+#else
+bigint##
+#end
 #elseif ( $param.type == "object" )
 Record<string, any>##
 #elseif ( $param.type == "integer" || $param.arrayType == "integer" )
+#if ( $isArgType )
 (number | bigint)##
+#else
+bigint##
+#end
 #elseif ( $param.type == "boolean" )
 boolean##
 #elseif( $param.type == "address" )
@@ -86,6 +94,14 @@ true##
 $name##
 #elseif ( $argType == "string | Uint8Array" && $fieldType == "Uint8Array" )
 typeof $name === 'string' ? base64ToBytes($name) : $name##
+#elseif ( $argType == "(number | bigint)" && $fieldType == "bigint" )
+#if ( $prop.required )
+BigInt($name)##
+#else
+typeof $name === 'undefined' ? undefined : BigInt($name)##
+#end
+#elseif ( $argType == "(number | bigint)[]" && $fieldType == "bigint[]" )
+${name}.map(BigInt)##
 #else
 UNHANDLED CONSTRUCTOR TYPE CONVERSION
 - property: $prop
