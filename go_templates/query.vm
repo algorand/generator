@@ -41,7 +41,7 @@ import (
   "github.com/algorand/go-algorand-sdk/v2/types"
 #end
 #foreach( $qp in $q.bodyParameters)
-#if( $str.matches("#oapiToGo($qp)", "models\..*") && $queryType != "SimulateTransaction" )
+#if( $str.matches("#oapiToGo($qp)", "models\..*") )
   "github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 #end
 #end
@@ -279,7 +279,7 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
 }
 #elseif( $queryType == "SimulateTransaction" )
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
-  err = s.c.post(ctx, &response, $processedPath, s.p, headers, s.request)
+  err = s.c.post(ctx, &response, $processedPath, s.p, headers, msgpack.Encode(&s.request))
   return
 }
 #elseif( $queryType == "GetTransactionGroupLedgerStateDeltasForRound" )
