@@ -129,12 +129,12 @@ typeof $value !== 'undefined' ? $assignment : undefined##
  */
 
 /* eslint-disable no-use-before-define */
-import { base64ToBytes } from '../../../../encoding/binarydata';
+import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
-import BlockHeader from '../../../../types/blockHeader';
-import { EncodedSignedTransaction } from '../../../../types/transactions/encoded';
+import BlockHeader from '../../../../types/blockHeader.js';
+import { EncodedSignedTransaction } from '../../../../types/transactions/encoded.js';
 #end
-import BaseModel from '../../basemodel';
+import BaseModel from '../../basemodel.js';
 
 #foreach( $modelEntry in $models.entrySet() )
 #set( $def = $modelEntry.key )
