@@ -36,10 +36,17 @@ function generate_js {
     -s "$ALGOD_SPEC" \
     -t "$TEMPLATE_DIR" \
     -m "$JS_SDK_DIR/src/client/v2/algod/models" \
-    -p "$TEMPLATE_DIR/common_config.properties,$TEMPLATE_DIR/parameter_order_overrides.properties"
+    -p "$TEMPLATE_DIR/algod_config.properties,$TEMPLATE_DIR/parameter_order_overrides.properties"
+
+  # Generate indexer.
+  $TEMPLATE \
+    -s "$INDEXER_SPEC" \
+    -t "$TEMPLATE_DIR" \
+    -m "$JS_SDK_DIR/src/client/v2/indexer/models" \
+    -p "$TEMPLATE_DIR/indexer_config.properties"
 
   pushd $JS_SDK_DIR
-  npm install
+  npm ci
   make format
   /publish.sh
 }
