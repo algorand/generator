@@ -31,6 +31,10 @@ function generate_js {
   TEMPLATE_DIR=$GENERATOR_DIR/typescript_templates
   export GH_REPO=$JS_SDK_REPO
   git clone --depth 1 https://github.com/algorand/js-algorand-sdk $JS_SDK_DIR
+
+  # Clean previously (stale) generated files before regenerating them.
+  find $JS_SDK_DIR/src/client/v2/algod/models/* $JS_SDK_DIR/src/client/v2/indexer/models/* -delete
+
   # Generate algod.
   $TEMPLATE \
     -s "$ALGOD_SPEC" \
@@ -56,6 +60,16 @@ function generate_go {
   TEMPLATE_DIR=$GENERATOR_DIR/go_templates
   export GH_REPO=$GO_SDK_REPO
   git clone https://github.com/algorand/go-algorand-sdk $GO_SDK_DIR
+  
+  # Clean previously (stale) generated files before regenerating them.
+  # Some files are hand-written instead of generated, so preserve those files here.
+  find $GO_SDK_DIR/client/v2/common/models/* $GO_SDK_DIR/client/v2/algod/* $GO_SDK_DIR/client/v2/indexer/* \
+    \! -name 'account_error_response.go' \
+    \! -name 'blockRaw.go' \
+    \! -name 'dryrun.go' \
+    \! -name 'shim.go' \
+    -delete
+
   # Generate algod.
   $TEMPLATE \
     -s $ALGOD_SPEC \
@@ -83,6 +97,14 @@ function generate_java {
   JAVA_SDK_DIR=/clones/java-algorand-sdk
   export GH_REPO=$JAVA_SDK_REPO
   git clone https://github.com/algorand/java-algorand-sdk $JAVA_SDK_DIR
+
+  # Clean previously (stale) generated files before regenerating them.
+  # Hand-written files are confined to algosdk/v2/client/common,
+  # except AlgodClient, which will be re-generated according to the specs. 
+  find $JAVA_SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/model/* \
+      $JAVA_SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/algod/* \
+      $JAVA_SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/indexer/* \
+      -delete
 
  $GENERATOR \
     java \
