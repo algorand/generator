@@ -105,7 +105,11 @@ ensureBigInt($name)##
 typeof $name === 'undefined' ? undefined : ensureBigInt($name)##
 #end
 #elseif ( $argType == "(number | bigint)[]" && $fieldType == "bigint[]" )
+#if ( $prop.required )
 ${name}.map(ensureBigInt)##
+#else
+typeof ${name} === 'undefined' ? undefined : ${name}.map(ensureBigInt)##
+#end
 #elseif ( $argType == "(number | bigint)" && $fieldType == "number" )
 #if ( $prop.required )
 ensureSafeInteger($name)##
@@ -113,7 +117,11 @@ ensureSafeInteger($name)##
 typeof $name === 'undefined' ? undefined : ensureSafeInteger($name)##
 #end
 #elseif ( $argType == "(number | bigint)[]" && $fieldType == "number[]" )
+#if ( $prop.required )
 ${name}.map(ensureSafeInteger)##
+#else
+typeof ${name} === 'undefined' ? undefined : ${name}.map(ensureSafeInteger)##
+#end
 #else
 UNHANDLED CONSTRUCTOR TYPE CONVERSION
 - property: $prop
