@@ -85,7 +85,7 @@ java -jar target/generator-*-jar-with-dependencies.jar \
       -s "$ALGOD_SPEC" \
       -t "$TEMPLATE_DIR" \
       -m "$SDK_DIR/src/client/v2/algod/models" \
-      -p "$TEMPLATE_DIR/algod_config.properties,$TEMPLATE_DIR/parameter_order_overrides.properties" \
+      -p "$TEMPLATE_DIR/algod_config.properties" \
 
 java -jar target/generator-*-jar-with-dependencies.jar \
       template \

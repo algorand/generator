@@ -3,19 +3,31 @@
 $str.kebabToCamel($param.propertyName.replaceAll("_", "-"))##
 #end
 ## Converts a parameter type into the SDK specific type.
-#macro ( toSdkType $param $isArgType )
+#macro ( toSdkType $className $param $isArgType )
+#set( $d = "$" )
+#set( $e = "!" )
+#set( $type_override_variable = "${d}${e}propFile.type_override_${className}_#paramName(${param})" )
+#set( $type_override = "#evaluate($type_override_variable)" )
 #if ( $param.algorandFormat == "SignedTransaction" )
 EncodedSignedTransaction##
 #elseif ( $param.algorandFormat == "Address" ) ## No special handling for Address in go SDK
 string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 BlockHeader##
-#elseif ( $param.algorandFormat == "uint64" )
+#elseif ( $type_override == "bigint" || ( $param.algorandFormat == "uint64" && $type_override.length() == 0 ) )
+#if ( $isArgType )
 (number | bigint)##
+#else
+bigint##
+#end
 #elseif ( $param.type == "object" )
 Record<string, any>##
-#elseif ( $param.type == "integer" || $param.arrayType == "integer" )
+#elseif ( $type_override == "number" || ( ( $param.type == "integer" || $param.arrayType == "integer" ) && $type_override.length() == 0 ) )
+#if ( $isArgType )
 (number | bigint)##
+#else
+number##
+#end
 #elseif ( $param.type == "boolean" )
 boolean##
 #elseif( $param.type == "address" )
@@ -78,14 +90,38 @@ true##
 #end
 #end
 ## Create an expression to assign a field in a constructor
-#macro ( constructorAssignType $prop )
-#set( $argType = "#toSdkType($prop, true)" )
-#set( $fieldType = "#toSdkType($prop, false)" )
+#macro ( constructorAssignType $className $prop )
+#set( $argType = "#toSdkType($className, $prop, true)" )
+#set( $fieldType = "#toSdkType($className, $prop, false)" )
 #set( $name = "#paramName($prop)" )
 #if ( $argType == $fieldType )
 $name##
 #elseif ( $argType == "string | Uint8Array" && $fieldType == "Uint8Array" )
 typeof $name === 'string' ? base64ToBytes($name) : $name##
+#elseif ( $argType == "(number | bigint)" && $fieldType == "bigint" )
+#if ( $prop.required )
+ensureBigInt($name)##
+#else
+typeof $name === 'undefined' ? undefined : ensureBigInt($name)##
+#end
+#elseif ( $argType == "(number | bigint)[]" && $fieldType == "bigint[]" )
+#if ( $prop.required )
+${name}.map(ensureBigInt)##
+#else
+typeof ${name} === 'undefined' ? undefined : ${name}.map(ensureBigInt)##
+#end
+#elseif ( $argType == "(number | bigint)" && $fieldType == "number" )
+#if ( $prop.required )
+ensureSafeInteger($name)##
+#else
+typeof $name === 'undefined' ? undefined : ensureSafeInteger($name)##
+#end
+#elseif ( $argType == "(number | bigint)[]" && $fieldType == "number[]" )
+#if ( $prop.required )
+${name}.map(ensureSafeInteger)##
+#else
+typeof ${name} === 'undefined' ? undefined : ${name}.map(ensureSafeInteger)##
+#end
 #else
 UNHANDLED CONSTRUCTOR TYPE CONVERSION
 - property: $prop
@@ -129,6 +165,7 @@ typeof $value !== 'undefined' ? $assignment : undefined##
  */
 
 /* eslint-disable no-use-before-define */
+import { ensureBigInt, ensureSafeInteger } from '../../../../utils/utils.js';
 import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
 import BlockHeader from '../../../../types/blockHeader.js';
@@ -160,7 +197,7 @@ export class $def.name extends BaseModel {
    * $str.formatDoc($prop.doc, "   * ")
    */
 #end
-  public #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop, false);
+  public #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($def.name, $prop, false);
 
 #end
   /**
@@ -178,13 +215,13 @@ export class $def.name extends BaseModel {
 #if ($use_object_params)
     #paramName($prop),
 #else
-    #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop, true),
+    #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($def.name, $prop, true),
 #end
 #end
 #if ($use_object_params)
   }: {
 #foreach ( $prop in $props )
-    #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($prop, true)
+    #paramName($prop)#questionMarkIfOptional($prop): #toSdkType($def.name, $prop, true)
 
 #end
   }) {
@@ -194,7 +231,7 @@ export class $def.name extends BaseModel {
     super();
 #foreach( $prop in $props )
 #set( $var = "#paramName($prop)" )
-    this.$var = #constructorAssignType($prop);
+    this.$var = #constructorAssignType($def.name, $prop);
 #end
 
     this.attribute_map = {
