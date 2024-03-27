@@ -9,8 +9,8 @@ $str.kebabToCamel($param.propertyName.replaceAll("_", "-"))##
 #set( $type_override_variable = "${d}${e}propFile.type_override_${className}_#paramName(${param})" )
 #set( $type_override = "#evaluate($type_override_variable)" )
 #if ( $param.algorandFormat == "SignedTransaction" )
-EncodedSignedTransaction##
-#elseif ( $param.algorandFormat == "Address" ) ## No special handling for Address in go SDK
+SignedTransaction##
+#elseif ( $param.algorandFormat == "Address" )## No special handling for Address in go SDK
 string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 BlockHeader##
@@ -21,7 +21,7 @@ BlockHeader##
 bigint##
 #end
 #elseif ( $param.type == "object" )
-Record<string, any>##
+Map<string, MsgpackEncodingData>##
 #elseif ( $type_override == "number" || ( ( $param.type == "integer" || $param.arrayType == "integer" ) && $type_override.length() == 0 ) )
 #if ( $isArgType )
 (number | bigint)##
@@ -46,7 +46,7 @@ Uint8Array##
 string##
 #elseif( $param.arrayType )
 ${param.arrayType}##
-#elseif( $param.refType ) ## This is second because the old code avoids typedef of references
+#elseif( $param.refType )## This is second because the old code avoids typedef of references
 ${param.refType}##
 #else
 UNHANDLED TYPE
@@ -131,24 +131,94 @@ UNHANDLED CONSTRUCTOR TYPE CONVERSION
 $unknown.type ## force a template failure with an unknown type
 #end
 #end
-## Create an expression to assign a field in the from_obj_for_encoding function
-#macro ( fromObjForEncodingAssignType $value $prop )
-#if ( "#isClassType($prop)" == "false" )
+## Create an expression which checks if a field should be included in msgpackPrepare
+#macro ( shouldMsgpackPrepareOptionalField $prop )
+#set( $value = "this.#paramName($prop)" )
+#if ( $prop.arrayType )
+$value && ${value}.length##
+#else
+$value##
+#end
+#end
+## Create an expression to assign a field in the msgpackPrepare function
+#macro ( msgpackPrepareField $prop )
+#set( $value = "this.#paramName($prop)" )
+#if ( $prop.algorandFormat == "BlockHeader" )
+blockHeaderMsgpackPrepare($value)##
+#elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" )
 $value##
 #elseif ( $prop.arrayType )
-#set ( $assignment = "${value}.map(${prop.arrayType}.from_obj_for_encoding)" )
-#if ($prop.required)
-$assignment##
+${value}.map(v => v.msgpackPrepare())##
 #else
-typeof $value !== 'undefined' ? $assignment : undefined##
+${value}.msgpackPrepare()##
+#end
+#end
+## Create an expression to assign a field in the jsonPrepare function
+#macro ( jsonPrepareField $className $prop )
+#set( $value = "this.#paramName($prop)" )
+#set( $sdkType = "#toSdkType($className, $prop, false)" )
+#if ( $prop.algorandFormat == "BlockHeader" )
+$value##
+#elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" && $sdkType != "Uint8Array" && $sdkType != "Uint8Array[]")
+$value##
+#elseif ( $prop.arrayType )
+#if ( $sdkType == "Uint8Array[]" )
+${value}.map(bytesToBase64)##
+#else
+${value}.map(v => v.jsonPrepare())##
+#end
+#elseif ( $sdkType == "Uint8Array" )
+bytesToBase64($value)##
+#else
+${value}.jsonPrepare()##
+#end
+#end
+## Create an expression to assign a field in the from_obj_for_encoding function
+#macro ( fromObjForEncodingAssignType $value $prop $className )
+#if ( $prop.algorandFormat == "BlockHeader" )
+blockHeaderFromDecodedMsgpack($value)## TODO: is required?
+#elseif ( "#isClassType($prop)" == "false" )
+#if ($prop.required)
+$value ?? #defaultValueForType($className, $prop)##
+#else
+$value##
+#end
+#elseif ( $prop.arrayType )
+#set ( $mapping = ".map(${prop.arrayType}.fromDecodedMsgpack)" )
+#if ($prop.required)
+($value ?? [])$mapping##
+#else
+typeof $value !== 'undefined' ? $value$mapping : undefined##
 #end
 #else
-#set ( $assignment = "${prop.refType}.from_obj_for_encoding($value)" )
+#set ( $assignment = "${prop.refType}.fromDecodedMsgpack" )
 #if ($prop.required)
-$assignment##
+$assignment($value ?? {})##
 #else
-typeof $value !== 'undefined' ? $assignment : undefined##
+typeof $value !== 'undefined' ? $assignment($value) : undefined##
 #end
+#end
+#end
+#macro ( defaultValueForType $className $prop )
+#set( $sdkType = "#toSdkType($className, $prop, false)" )
+#if ( $prop.arrayType )
+[]##
+#elseif ( $sdkType == "string" )
+""##
+#elseif ( $sdkType == "number" || $sdkType == "bigint" )## Any bigint type will accept numbers anyway
+0##
+#elseif ( $sdkType == "boolean" )
+false##
+#elseif ( $sdkType == "Uint8Array" )
+new Uint8Array()##
+#elseif ( $sdkType == "BlockHeader" || $sdkType == "Map<string, MsgpackEncodingData>" || $sdkType == "SignedTransaction" )
+{}##
+#else
+UNHANDLED DEFAULT TYPE
+- class: $className
+- property: $prop
+- sdkType: $sdkType
+$unknown.type ## force a template failure with an unknown type
 #end
 #end
 #macro ( questionMarkIfOptional $param )
@@ -166,12 +236,13 @@ typeof $value !== 'undefined' ? $assignment : undefined##
 
 /* eslint-disable no-use-before-define */
 import { ensureBigInt, ensureSafeInteger } from '../../../../utils/utils.js';
-import { base64ToBytes } from '../../../../encoding/binarydata.js';
+import { MsgpackEncodable, MsgpackEncodingData, JSONEncodable, JSONEncodingData } from '../../../../encoding/encoding.js';
+import { base64ToBytes, bytesToBase64 } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
-import BlockHeader from '../../../../types/blockHeader.js';
-import { EncodedSignedTransaction } from '../../../../types/transactions/encoded.js';
+import BlockHeader, { blockHeaderMsgpackPrepare, blockHeaderFromDecodedMsgpack } from '../../../../types/blockHeader.js';
+import { SignedTransaction } from '../../../../signedTransaction.js';
 #end
-import BaseModel from '../../basemodel.js';
+// import BaseModel from '../../basemodel.js';
 
 #foreach( $modelEntry in $models.entrySet() )
 #set( $def = $modelEntry.key )
@@ -190,7 +261,7 @@ import BaseModel from '../../basemodel.js';
  * $str.formatDoc($def.doc, " * ")
  */
 #end
-export class $def.name extends BaseModel {
+export class $def.name implements MsgpackEncodable, JSONEncodable {
 #foreach( $prop in $props )
 #if ( !$prop.doc.isEmpty() )
   /**
@@ -228,48 +299,85 @@ export class $def.name extends BaseModel {
 #else
   ) {
 #end
-    super();
 #foreach( $prop in $props )
 #set( $var = "#paramName($prop)" )
     this.$var = #constructorAssignType($def.name, $prop);
 #end
-
-    this.attribute_map = {
-#foreach( $prop in $props )
-      #paramName($prop): '$prop.propertyName',
-#end
-    }
   }
 
-  // eslint-disable-next-line camelcase
-  static from_obj_for_encoding(data: Record<string, any>): $def.name {
-    /* eslint-disable dot-notation */
-#set ( $d = "$" )## Create a variable in order to insert a $ into the code
+  msgpackPrepare(): Map<string, MsgpackEncodingData> {
+    const data = new Map<string, MsgpackEncodingData>([
 #foreach( $prop in $props )
-#if ($prop.required)
-#if ($prop.arrayType)
-    if (!Array.isArray(data['$prop.propertyName']))
-      throw new Error(`Response is missing required array field '${prop.propertyName}': ${d}{data}`);
+#if ( $prop.required )
+    ['$prop.propertyName', #msgpackPrepareField($prop)],
+#end
+#end
+    ]);
+#foreach( $prop in $props )
+#if ( ! $prop.required )
+    if (#shouldMsgpackPrepareOptionalField($prop)) {
+      data.set('$prop.propertyName', #msgpackPrepareField($prop));
+    }
+#end
+#end
+    return data;
+  }
+
+  jsonPrepare(): Record<string, JSONEncodingData> {
+    const obj: Record<string, JSONEncodingData> = {};
+
+    /* eslint-disable dot-notation */
+#foreach( $prop in $props )
+#if ( $prop.required )
+    obj['$prop.propertyName'] = #jsonPrepareField($def.name, $prop);
 #else
-    if (typeof data['$prop.propertyName'] === 'undefined')
-      throw new Error(`Response is missing required field '${prop.propertyName}': ${d}{data}`);
+    if (#shouldMsgpackPrepareOptionalField($prop)) {
+      obj['$prop.propertyName'] = #jsonPrepareField($def.name, $prop);
+    }
 #end
 #end
+    /* eslint-enable dot-notation */
+
+    return obj;
+  }
+
+//  // eslint-disable-next-line camelcase
+//  static from_obj_for_encoding(data: Record<string, any>): $def.name {
+//    /* eslint-disable dot-notation */
+#if ($use_object_params)
+//    return new ${def.name}({
+#foreach( $prop in $props )
+//      #paramName($prop): #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop, $def.name),
 #end
+//    });
+#else
+//    return new ${def.name}(
+#foreach( $prop in $props )
+//      #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop, $def.name),
+#end
+//    );
+#end
+//    /* eslint-enable dot-notation */
+//  }
+
+  static fromDecodedMsgpack(data: unknown): $def.name {
+#set ( $d = "$" )## Create a variable in order to insert a $ into the code
+    if (!(data instanceof Map)) {
+      throw new Error(`Invalid decoded logic sig account: ${d}{data}`);
+    }
 #if ($use_object_params)
     return new ${def.name}({
 #foreach( $prop in $props )
-      #paramName($prop): #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop),
+      #paramName($prop): #fromObjForEncodingAssignType("data.get('$prop.propertyName')", $prop, $def.name),
 #end
     });
 #else
     return new ${def.name}(
 #foreach( $prop in $props )
-      #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop),
+      #fromObjForEncodingAssignType("data.get('$prop.propertyName')", $prop, $def.name),
 #end
     );
 #end
-    /* eslint-enable dot-notation */
   }
 }
 
