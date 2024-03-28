@@ -173,25 +173,67 @@ bytesToBase64($value)##
 ${value}.jsonPrepare()##
 #end
 #end
-## Create an expression to assign a field in the from_obj_for_encoding function
-#macro ( fromObjForEncodingAssignType $value $prop $className )
+## Create an expression to assign a field in the fromDecodedMsgpack function
+#macro ( fromDecodedMsgpackAssignType $value $prop $className )
 #if ( $prop.algorandFormat == "BlockHeader" )
-blockHeaderFromDecodedMsgpack($value)## TODO: is required?
-#elseif ( "#isClassType($prop)" == "false" )
+blockHeaderFromDecodedMsgpack($value)##
+#elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" )
 #if ($prop.required)
 $value ?? #defaultValueForType($className, $prop)##
 #else
 $value##
 #end
 #elseif ( $prop.arrayType )
+#if ( $prop.algorandFormat == "SignedTransaction" )
+#set ( $mapping = ".map(SignedTransaction.fromDecodedMsgpack)" )
+#else
 #set ( $mapping = ".map(${prop.arrayType}.fromDecodedMsgpack)" )
+#end
 #if ($prop.required)
 ($value ?? [])$mapping##
 #else
 typeof $value !== 'undefined' ? $value$mapping : undefined##
 #end
 #else
+#if ( $prop.algorandFormat == "SignedTransaction" )
+#set ( $assignment = "SignedTransaction.fromDecodedMsgpack" )
+#else
 #set ( $assignment = "${prop.refType}.fromDecodedMsgpack" )
+#end
+#if ($prop.required)
+$assignment($value ?? {})##
+#else
+typeof $value !== 'undefined' ? $assignment($value) : undefined##
+#end
+#end
+#end
+## Create an expression to assign a field in the fromDecodedJSON function
+#macro ( fromDecodedJSONAssignType $value $prop $className )
+#if ( $prop.algorandFormat == "BlockHeader" )
+$value as BlockHeader##
+#elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" )
+#if ($prop.required)
+$value ?? #defaultValueForType($className, $prop)##
+#else
+$value##
+#end
+#elseif ( $prop.arrayType )
+#if ( $prop.algorandFormat == "SignedTransaction" )
+#set ( $mapping = ".map(SignedTransaction.fromDecodedJSON)" )
+#else
+#set ( $mapping = ".map(${prop.arrayType}.fromDecodedJSON)" )
+#end
+#if ($prop.required)
+($value ?? [])$mapping##
+#else
+typeof $value !== 'undefined' ? $value$mapping : undefined##
+#end
+#else
+#if ( $prop.algorandFormat == "SignedTransaction" )
+#set ( $assignment = "SignedTransaction.fromDecodedJSON" )
+#else
+#set ( $assignment = "${prop.refType}.fromDecodedJSON" )
+#end
 #if ($prop.required)
 $assignment($value ?? {})##
 #else
@@ -341,24 +383,28 @@ export class $def.name implements MsgpackEncodable, JSONEncodable {
     return obj;
   }
 
-//  // eslint-disable-next-line camelcase
-//  static from_obj_for_encoding(data: Record<string, any>): $def.name {
-//    /* eslint-disable dot-notation */
+  static fromDecodedJSON(encoded: unknown): $def.name {
+    if (encoded === null || typeof encoded !== 'object') {
+#set($d = "$")
+      throw new Error(`Invalid decoded $def.name: ${d}{encoded}`);
+    }
+    const data = encoded as Record<string, any>;
+    /* eslint-disable dot-notation */
 #if ($use_object_params)
-//    return new ${def.name}({
+    return new ${def.name}({
 #foreach( $prop in $props )
-//      #paramName($prop): #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop, $def.name),
+      #paramName($prop): #fromDecodedJSONAssignType("data['$prop.propertyName']", $prop, $def.name),
 #end
-//    });
+    });
 #else
-//    return new ${def.name}(
+    return new ${def.name}(
 #foreach( $prop in $props )
-//      #fromObjForEncodingAssignType("data['$prop.propertyName']", $prop, $def.name),
+      #fromDecodedJSONAssignType("data['$prop.propertyName']", $prop, $def.name),
 #end
-//    );
+    );
 #end
-//    /* eslint-enable dot-notation */
-//  }
+    /* eslint-enable dot-notation */
+  }
 
   static fromDecodedMsgpack(data: unknown): $def.name {
 #set ( $d = "$" )## Create a variable in order to insert a $ into the code
@@ -368,13 +414,13 @@ export class $def.name implements MsgpackEncodable, JSONEncodable {
 #if ($use_object_params)
     return new ${def.name}({
 #foreach( $prop in $props )
-      #paramName($prop): #fromObjForEncodingAssignType("data.get('$prop.propertyName')", $prop, $def.name),
+      #paramName($prop): #fromDecodedMsgpackAssignType("data.get('$prop.propertyName')", $prop, $def.name),
 #end
     });
 #else
     return new ${def.name}(
 #foreach( $prop in $props )
-      #fromObjForEncodingAssignType("data.get('$prop.propertyName')", $prop, $def.name),
+      #fromDecodedMsgpackAssignType("data.get('$prop.propertyName')", $prop, $def.name),
 #end
     );
 #end
