@@ -59,6 +59,57 @@ $unknown.type ## force a template failure with an unknown type
 #end
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array postfix to arrays...
 #end
+## Converts a parameter type into the SDK specific type.
+#macro ( toSchema $className $param )
+#set( $sdkType = "#toSdkType($className, $param, false)" )
+#if ( $sdkType == "SignedTransaction[]" )
+#set ( $sdkType = "SignedTransaction" )
+#end
+#if ( $param.algorandFormat == "BlockHeader" )
+BLOCK_HEADER_SCHEMA##
+#elseif ( "#isClassType($param)" == "false" && $sdkType != "SignedTransaction" && $sdkType != "UntypedValue")
+#if ( $param.algorandFormat == "Address" )
+new AddressSchema()##
+#elseif ( $param.algorandFormat == "uint64" || $param.type == "integer" )
+new Uint64Schema()##
+#elseif ( $param.arrayType == "integer" )
+new ArraySchema(new Uint64Schema())##
+#elseif ( $param.type == "boolean" )
+new BooleanSchema()##
+#elseif( $param.type == "address" )
+new AddressSchema()##
+#elseif( $param.type == "binary" )
+new ByteArraySchema()##
+#elseif($param.arrayType && $param.format == "byte")
+new ByteArraySchema()##
+#elseif( $param.type == "string" && $param.format == "byte" )
+new ByteArraySchema()##
+#elseif( $param.type == "string" )
+new StringSchema()##
+#elseif( $param.arrayType == "string" )
+new ArraySchema(new StringSchema())##
+#else
+UNHANDLED SCHEMA TYPE
+- className: $className
+- property: $param
+- sdkType: $sdkType
+$unknown.type ## force a template failure with an unknown type
+#end
+#elseif ( $param.arrayType )
+#if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
+#set ( $itemSchema = "${sdkType}.encodingSchema" )
+#else
+#set ( $itemSchema = "${param.arrayType}.encodingSchema" )
+#end
+new ArraySchema($itemSchema)##
+#else
+#if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
+${sdkType}.encodingSchema##
+#else
+${prop.refType}.encodingSchema##
+#end
+#end
+#end
 ## Check if there's a class associated with this type
 #macro ( isClassType $param )
 #if ( $param.algorandFormat == "SignedTransaction" )
@@ -148,9 +199,9 @@ blockHeaderMsgpackPrepare($value)##
 #elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" && $prop.type != "object" )
 $value##
 #elseif ( $prop.arrayType )
-${value}.map(v => v.msgpackPrepare())##
+${value}.map(v => v.toEncodingData())##
 #else
-${value}.msgpackPrepare()##
+${value}.toEncodingData()##
 #end
 #end
 ## Create an expression to assign a field in the jsonPrepare function
@@ -189,9 +240,9 @@ $value##
 #end
 #elseif ( $prop.arrayType )
 #if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
-#set ( $mapping = ".map(${sdkType}.fromDecodedMsgpack)" )
+#set ( $mapping = ".map(${sdkType}.fromEncodingData)" )
 #else
-#set ( $mapping = ".map(${prop.arrayType}.fromDecodedMsgpack)" )
+#set ( $mapping = ".map(${prop.arrayType}.fromEncodingData)" )
 #end
 #if ($prop.required)
 ($value ?? [])$mapping##
@@ -200,9 +251,9 @@ typeof $value !== 'undefined' ? $value$mapping : undefined##
 #end
 #else
 #if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
-#set ( $assignment = "${sdkType}.fromDecodedMsgpack" )
+#set ( $assignment = "${sdkType}.fromEncodingData" )
 #else
-#set ( $assignment = "${prop.refType}.fromDecodedMsgpack" )
+#set ( $assignment = "${prop.refType}.fromEncodingData" )
 #end
 #if ($prop.required)
 $assignment($value ?? {})##
@@ -286,10 +337,11 @@ $unknown.type ## force a template failure with an unknown type
 
 /* eslint-disable no-use-before-define */
 import { ensureBigInt, ensureSafeInteger } from '../../../../utils/utils.js';
-import { MsgpackEncodable, MsgpackEncodingData, JSONEncodable, JSONEncodingData } from '../../../../encoding/encoding.js';
-import { base64ToBytes, bytesToBase64 } from '../../../../encoding/binarydata.js';
+import { Encodable, Schema } from '../../../../encoding/encoding.js';
+import { NamedMapSchema, ArraySchema, AddressSchema, Uint64Schema, StringSchema, BooleanSchema, ByteArraySchema } from '../../../../encoding/schema/index.js';
+import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
-import BlockHeader, { blockHeaderMsgpackPrepare, blockHeaderFromDecodedMsgpack, blockHeaderJSONPrepare, blockHeaderFromDecodedJSON } from '../../../../types/blockHeader.js';
+import BlockHeader, { blockHeaderMsgpackPrepare, blockHeaderFromDecodedMsgpack, BLOCK_HEADER_SCHEMA } from '../../../../types/blockHeader.js';
 import { SignedTransaction } from '../../../../signedTransaction.js';
 #end
 import { UntypedValue } from '../../untypedmodel.js';
@@ -312,7 +364,22 @@ import { UntypedValue } from '../../untypedmodel.js';
  * $str.formatDoc($def.doc, " * ")
  */
 #end
-export class $def.name implements MsgpackEncodable, JSONEncodable {
+export class $def.name implements Encodable {
+
+  private static encodingSchemaValue: Schema | undefined;
+
+  static get encodingSchema(): Schema {
+    if (!this.encodingSchemaValue) {
+      this.encodingSchemaValue = new NamedMapSchema([]);
+      (this.encodingSchemaValue as NamedMapSchema).entries.push(
+#foreach( $prop in $props )
+        { key: '$prop.propertyName', valueSchema: #toSchema($def.name, $prop), required: $prop.required, omitEmpty: true },
+#end
+      );
+    }
+    return this.encodingSchemaValue;
+  }
+
 #foreach( $prop in $props )
 #if ( !$prop.doc.isEmpty() )
   /**
@@ -356,8 +423,13 @@ export class $def.name implements MsgpackEncodable, JSONEncodable {
 #end
   }
 
-  msgpackPrepare(): Map<string, MsgpackEncodingData> {
-    const data = new Map<string, MsgpackEncodingData>([
+  // eslint-disable-next-line class-methods-use-this
+  getEncodingSchema(): Schema {
+    return ${def.name}.encodingSchema;
+  }
+
+  toEncodingData(): Map<string, unknown> {
+    const data = new Map<string, unknown>([
 #foreach( $prop in $props )
 #if ( $prop.required )
     ['$prop.propertyName', #msgpackPrepareField($prop)],
@@ -374,48 +446,7 @@ export class $def.name implements MsgpackEncodable, JSONEncodable {
     return data;
   }
 
-  jsonPrepare(): Record<string, JSONEncodingData> {
-    const obj: Record<string, JSONEncodingData> = {};
-
-    /* eslint-disable dot-notation */
-#foreach( $prop in $props )
-#if ( $prop.required )
-    obj['$prop.propertyName'] = #jsonPrepareField($def.name, $prop);
-#else
-    if (#shouldMsgpackPrepareOptionalField($prop)) {
-      obj['$prop.propertyName'] = #jsonPrepareField($def.name, $prop);
-    }
-#end
-#end
-    /* eslint-enable dot-notation */
-
-    return obj;
-  }
-
-  static fromDecodedJSON(encoded: unknown): $def.name {
-    if (encoded === null || typeof encoded !== 'object') {
-#set($d = "$")
-      throw new Error(`Invalid decoded $def.name: ${d}{encoded}`);
-    }
-    const data = encoded as Record<string, any>;
-    /* eslint-disable dot-notation */
-#if ($use_object_params)
-    return new ${def.name}({
-#foreach( $prop in $props )
-      #paramName($prop): #fromDecodedJSONAssignType("data['$prop.propertyName']", $prop, $def.name),
-#end
-    });
-#else
-    return new ${def.name}(
-#foreach( $prop in $props )
-      #fromDecodedJSONAssignType("data['$prop.propertyName']", $prop, $def.name),
-#end
-    );
-#end
-    /* eslint-enable dot-notation */
-  }
-
-  static fromDecodedMsgpack(data: unknown): $def.name {
+  static fromEncodingData(data: unknown): $def.name {
 #set ( $d = "$" )## Create a variable in order to insert a $ into the code
     if (!(data instanceof Map)) {
       throw new Error(`Invalid decoded logic sig account: ${d}{data}`);
