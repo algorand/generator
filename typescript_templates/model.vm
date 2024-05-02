@@ -10,8 +10,12 @@ $str.kebabToCamel($param.propertyName.replaceAll("_", "-"))##
 #set( $type_override = "#evaluate($type_override_variable)" )
 #if ( $param.algorandFormat == "SignedTransaction" )
 SignedTransaction##
-#elseif ( $param.algorandFormat == "Address" )## No special handling for Address in go SDK
-string##
+#elseif ( $param.algorandFormat == "Address" )
+#if ( $isArgType )
+(Address | string)##
+#else
+Address##
+#end
 #elseif ( $param.algorandFormat == "BlockHeader" )
 BlockHeader##
 #elseif ( $type_override == "bigint" || ( $param.algorandFormat == "uint64" && $type_override.length() == 0 ) )
@@ -68,20 +72,18 @@ $unknown.type ## force a template failure with an unknown type
 #if ( $param.algorandFormat == "BlockHeader" )
 BLOCK_HEADER_SCHEMA##
 #elseif ( "#isClassType($param)" == "false" && $sdkType != "SignedTransaction" && $sdkType != "UntypedValue")
-#if ( $param.algorandFormat == "Address" )
-new AddressSchema()##
+#if ( $param.type == "address" || $param.algorandFormat == "Address" )
+new StringSchema()## # To comply with existing msgpack REST API behavior, encode addresses as strings
 #elseif ( $param.algorandFormat == "uint64" || $param.type == "integer" )
 new Uint64Schema()##
 #elseif ( $param.arrayType == "integer" )
 new ArraySchema(new Uint64Schema())##
 #elseif ( $param.type == "boolean" )
 new BooleanSchema()##
-#elseif( $param.type == "address" )
-new AddressSchema()##
 #elseif( $param.type == "binary" )
 new ByteArraySchema()##
 #elseif($param.arrayType && $param.format == "byte")
-new ByteArraySchema()##
+new ArraySchema(new ByteArraySchema())##
 #elseif( $param.type == "string" && $param.format == "byte" )
 new ByteArraySchema()##
 #elseif( $param.type == "string" )
@@ -147,6 +149,14 @@ true##
 #set( $name = "#paramName($prop)" )
 #if ( $argType == $fieldType )
 $name##
+#elseif ( $argType == "(Address | string)" && $fieldType == "Address" )
+typeof $name === 'string' ? Address.fromString($name) : $name##
+#elseif ( $argType == "(Address | string)[]" && $fieldType == "Address[]" )
+#if ( $prop.required )
+${name}.map(addr => typeof addr === 'string' ? Address.fromString(addr) : addr)##
+#else
+typeof $name !== 'undefined' ? ${name}.map(addr => typeof addr === 'string' ? Address.fromString(addr) : addr) : undefined##
+#end
 #elseif ( $argType == "string | Uint8Array" && $fieldType == "Uint8Array" )
 typeof $name === 'string' ? base64ToBytes($name) : $name##
 #elseif ( $argType == "(number | bigint)" && $fieldType == "bigint" )
@@ -196,6 +206,12 @@ $value##
 #set( $value = "this.#paramName($prop)" )
 #if ( $prop.algorandFormat == "BlockHeader" )
 blockHeaderMsgpackPrepare($value)##
+#elseif ( $prop.algorandFormat == "Address" || $prop.type == "Address" )
+#if ( $prop.arrayType )
+${value}.map(addr => addr.toString())##
+#else
+${value}.toString()##
+#end
 #elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" && $prop.type != "object" )
 $value##
 #elseif ( $prop.arrayType )
@@ -306,6 +322,8 @@ typeof $value !== 'undefined' ? $assignment($value) : undefined##
 []##
 #elseif ( $sdkType == "string" )
 ""##
+#elseif ( $sdkType == "Address" )
+Address.zeroAddress()##
 #elseif ( $sdkType == "number" || $sdkType == "bigint" )## Any bigint type will accept numbers anyway
 0##
 #elseif ( $sdkType == "boolean" )
@@ -338,12 +356,13 @@ $unknown.type ## force a template failure with an unknown type
 /* eslint-disable no-use-before-define */
 import { ensureBigInt, ensureSafeInteger } from '../../../../utils/utils.js';
 import { Encodable, Schema } from '../../../../encoding/encoding.js';
-import { NamedMapSchema, ArraySchema, AddressSchema, Uint64Schema, StringSchema, BooleanSchema, ByteArraySchema } from '../../../../encoding/schema/index.js';
+import { NamedMapSchema, ArraySchema, Uint64Schema, StringSchema, BooleanSchema, ByteArraySchema } from '../../../../encoding/schema/index.js';
 import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
 import BlockHeader, { blockHeaderMsgpackPrepare, blockHeaderFromDecodedMsgpack, BLOCK_HEADER_SCHEMA } from '../../../../types/blockHeader.js';
 import { SignedTransaction } from '../../../../signedTransaction.js';
 #end
+import { Address } from '../../../../encoding/address.js';
 import { UntypedValue } from '../../untypedmodel.js';
 // import BaseModel from '../../basemodel.js';
 
@@ -373,7 +392,7 @@ export class $def.name implements Encodable {
       this.encodingSchemaValue = new NamedMapSchema([]);
       (this.encodingSchemaValue as NamedMapSchema).entries.push(
 #foreach( $prop in $props )
-        { key: '$prop.propertyName', valueSchema: #toSchema($def.name, $prop), required: $prop.required, omitEmpty: true },
+        { key: '$prop.propertyName', valueSchema: #toSchema($def.name, $prop), required: $prop.required, omitEmpty: !$prop.required },
 #end
       );
     }
