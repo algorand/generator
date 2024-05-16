@@ -1,4 +1,4 @@
-FROM golang:1.17.9-bullseye
+FROM golang:1.21.10
 
 ARG GITHUB_CLI_URL="https://github.com/cli/cli/releases/download/v1.8.1/gh_1.8.1_linux_amd64.tar.gz"
 
