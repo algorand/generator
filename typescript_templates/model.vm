@@ -65,51 +65,41 @@ $unknown.type ## force a template failure with an unknown type
 #end
 ## Converts a parameter type into the SDK specific type.
 #macro ( toSchema $className $param )
-#set( $sdkType = "#toSdkType($className, $param, false)" )
-#if ( $sdkType == "SignedTransaction[]" )
-#set ( $sdkType = "SignedTransaction" )
+#if ( $param.arrayType )
+new ArraySchema(##
 #end
 #if ( $param.algorandFormat == "BlockHeader" )
 BLOCK_HEADER_SCHEMA##
-#elseif ( "#isClassType($param)" == "false" && $sdkType != "SignedTransaction" && $sdkType != "UntypedValue")
-#if ( $param.type == "address" || $param.algorandFormat == "Address" )
+#elseif ( $param.algorandFormat == "SignedTransaction" )
+SignedTransaction.encodingSchema##
+#elseif ( $param.type == "object" || $param.arrayType == "object" )
+UntypedValue.encodingSchema##
+#elseif ( $param.algorandFormat == "Address" )
 new StringSchema()## # To comply with existing msgpack REST API behavior, encode addresses as strings
-#elseif ( $param.algorandFormat == "uint64" || $param.type == "integer" )
+#elseif ( $param.algorandFormat == "uint64" || $param.type == "integer" || $param.arrayType == "integer" )
 new Uint64Schema()##
-#elseif ( $param.arrayType == "integer" )
-new ArraySchema(new Uint64Schema())##
-#elseif ( $param.type == "boolean" )
+#elseif ( $param.type == "boolean" || $param.arrayType == "boolean" )
 new BooleanSchema()##
-#elseif( $param.type == "binary" )
+#elseif( ( $param.type == "string" || $param.arrayType == "string" ) && ( $param.format == "byte" || $param.format == "binary" ) )
 new ByteArraySchema()##
-#elseif($param.arrayType && $param.format == "byte")
-new ArraySchema(new ByteArraySchema())##
-#elseif( $param.type == "string" && $param.format == "byte" )
-new ByteArraySchema()##
-#elseif( $param.type == "string" )
+#elseif( $param.type == "string" || $param.arrayType == "string" )
 new StringSchema()##
-#elseif( $param.arrayType == "string" )
-new ArraySchema(new StringSchema())##
+#elseif ( "#isClassType($param)" == "true" )
+#if ( $param.arrayType )
+#set( $propClassName = $param.arrayType )
+#else
+#set( $propClassName = $param.refType )
+#end
+${propClassName}.encodingSchema##
 #else
 UNHANDLED SCHEMA TYPE
 - className: $className
 - property: $param
-- sdkType: $sdkType
+- isClassType: #isClassType($param)
 $unknown.type ## force a template failure with an unknown type
 #end
-#elseif ( $param.arrayType )
-#if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
-#set ( $itemSchema = "${sdkType}.encodingSchema" )
-#else
-#set ( $itemSchema = "${param.arrayType}.encodingSchema" )
-#end
-new ArraySchema($itemSchema)##
-#else
-#if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
-${sdkType}.encodingSchema##
-#else
-${prop.refType}.encodingSchema##
-#end
+#if ( $param.arrayType )
+)##
 #end
 #end
 ## Check if there's a class associated with this type
