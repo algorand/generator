@@ -182,32 +182,41 @@ UNHANDLED CONSTRUCTOR TYPE CONVERSION
 $unknown.type ## force a template failure with an unknown type
 #end
 #end
-## Create an expression which checks if a field should be included in msgpackPrepare
-#macro ( shouldMsgpackPrepareOptionalField $prop )
-#set( $value = "this.#paramName($prop)" )
-#if ( $prop.arrayType )
-$value && ${value}.length##
-#else
-$value##
-#end
-#end
 ## Create an expression to assign a field in the toEncodingData function
-#macro ( fieldToEncodingData $prop )## TODO: combine shouldMsgpackPrepareOptionalField with this, like fromEncodingDataAssignType
+#macro ( fieldToEncodingData $prop )
 #set( $value = "this.#paramName($prop)" )
 #if ( $prop.algorandFormat == "BlockHeader" )
 blockHeaderToEncodingData($value)##
 #elseif ( $prop.algorandFormat == "Address" || $prop.type == "Address" )
+#if ( !$prop.required )
+typeof ${value} !== "undefined" ? ##
+#end
 #if ( $prop.arrayType )
 ${value}.map(addr => addr.toString())##
 #else
 ${value}.toString()##
 #end
+#if ( !$prop.required )
+: undefined##
+#end
 #elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" && $prop.type != "object" )
 $value##
 #elseif ( $prop.arrayType )
+#if ( !$prop.required )
+typeof ${value} !== "undefined" ? ##
+#end
 ${value}.map(v => v.toEncodingData())##
+#if ( !$prop.required )
+: undefined##
+#end
 #else
+#if ( !$prop.required )
+typeof ${value} !== "undefined" ? ##
+#end
 ${value}.toEncodingData()##
+#if ( !$prop.required )
+: undefined##
+#end
 #end
 #end
 ## Create an expression to assign a field in the fromEncodingData function
@@ -351,21 +360,11 @@ export class $def.name implements Encodable {
   }
 
   toEncodingData(): Map<string, unknown> {
-    const data = new Map<string, unknown>([
+    return new Map<string, unknown>([
 #foreach( $prop in $props )
-#if ( $prop.required )
     ['$prop.propertyName', #fieldToEncodingData($prop)],
 #end
-#end
     ]);
-#foreach( $prop in $props )
-#if ( ! $prop.required )
-    if (#shouldMsgpackPrepareOptionalField($prop)) {
-      data.set('$prop.propertyName', #fieldToEncodingData($prop));
-    }
-#end
-#end
-    return data;
   }
 
   static fromEncodingData(data: unknown): $def.name {
