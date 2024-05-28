@@ -132,6 +132,23 @@ false##
 true##
 #end
 #end
+## Returns "true" if the type is a primative, meaning it's not an object that requires manipulation
+## when converting to & from encoding data.
+#macro ( isPrimativeType $param )
+#if ( $param.algorandFormat == "uint64" || $param.type == "integer" || $param.arrayType == "integer" )
+true##
+#elseif ( $param.type == "boolean" || $param.arrayType == "boolean" )
+true##
+#elseif( $param.type == "string" || $param.arrayType == "string" )
+#if ( $param.algorandFormat == "Address" || $param.algorandFormat == "SignedTransaction" )
+false##
+#else
+true##
+#end
+#else
+false##
+#end
+#end
 ## Create an expression to assign a field in a constructor
 #macro ( constructorAssignType $className $prop )
 #set( $argType = "#toSdkType($className, $prop, true)" )
@@ -185,72 +202,70 @@ $unknown.type ## force a template failure with an unknown type
 ## Create an expression to assign a field in the toEncodingData function
 #macro ( fieldToEncodingData $prop )
 #set( $value = "this.#paramName($prop)" )
+#set( $isPrimative = "#isPrimativeType($prop)" == "true" )
+#set( $needsUndefinedCheck = !$isPrimative && !$prop.required )
+#if ( $needsUndefinedCheck )
+typeof ${value} !== "undefined" ? ##
+#end
+#if ( $prop.arrayType && !$isPrimative )## No need to map a primative type
+${value}.map(v => ##
+#set ( $value = "v" )
+#end
 #if ( $prop.algorandFormat == "BlockHeader" )
 blockHeaderToEncodingData($value)##
-#elseif ( $prop.algorandFormat == "Address" || $prop.type == "Address" )
-#if ( !$prop.required )
-typeof ${value} !== "undefined" ? ##
-#end
-#if ( $prop.arrayType )
-${value}.map(addr => addr.toString())##
-#else
+#elseif ( $prop.algorandFormat == "Address" )
 ${value}.toString()##
-#end
-#if ( !$prop.required )
-: undefined##
-#end
-#elseif ( "#isClassType($prop)" == "false" && $prop.algorandFormat != "SignedTransaction" && $prop.type != "object" )
+#elseif ( $isPrimative )
 $value##
-#elseif ( $prop.arrayType )
-#if ( !$prop.required )
-typeof ${value} !== "undefined" ? ##
-#end
-${value}.map(v => v.toEncodingData())##
-#if ( !$prop.required )
-: undefined##
-#end
 #else
-#if ( !$prop.required )
-typeof ${value} !== "undefined" ? ##
-#end
 ${value}.toEncodingData()##
-#if ( !$prop.required )
-: undefined##
 #end
+#if ( $prop.arrayType && !$isPrimative )
+)##
+#end
+#if ( $needsUndefinedCheck )
+: undefined##
 #end
 #end
 ## Create an expression to assign a field in the fromEncodingData function
 #macro ( fromEncodingDataAssignType $value $prop $className )
-#set( $sdkType = "#toSdkType($className, $prop, false)" )
-#if ( $sdkType == "SignedTransaction[]" )
-#set ( $sdkType = "SignedTransaction" )
+#set( $isPrimative = "#isPrimativeType($prop)" == "true" || $prop.algorandFormat == "Address" )## Addresses are encoded as strings, so treat them as primatives here
+#set( $needsUndefinedCheck = !$isPrimative && !$prop.required )
+#if ( $needsUndefinedCheck )
+typeof ${value} !== "undefined" ? ##
+#end
+#if ( $prop.arrayType && !$isPrimative )
+#if ( $prop.required )
+(${value} ?? [])##
+#else
+$value##
+#end
+.map((v: unknown) => ##
+#set ( $value = "v" )
+#elseif ( $prop.required && !$isPrimative )
+#set ( $value = "($value ?? new Map())" )##
 #end
 #if ( $prop.algorandFormat == "BlockHeader" )
 blockHeaderFromEncodingData($value)##
-#elseif ( "#isClassType($prop)" == "false" && $sdkType != "SignedTransaction" && $sdkType != "UntypedValue")
-$value##
+#elseif ( $isPrimative )
+${value}##
+#else
+#if ( $prop.algorandFormat == "SignedTransaction" )
+SignedTransaction##
+#elseif ( $prop.type == "object" )
+UntypedValue##
 #elseif ( $prop.arrayType )
-#if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
-#set ( $mapping = ".map(${sdkType}.fromEncodingData)" )
+${prop.arrayType}##
 #else
-#set ( $mapping = ".map(${prop.arrayType}.fromEncodingData)" )
+${prop.refType}##
 #end
-#if ($prop.required)
-($value ?? [])$mapping##
-#else
-typeof $value !== 'undefined' ? $value$mapping : undefined##
+.fromEncodingData($value)
 #end
-#else
-#if ( $sdkType == "SignedTransaction" || $sdkType == "UntypedValue")
-#set ( $assignment = "${sdkType}.fromEncodingData" )
-#else
-#set ( $assignment = "${prop.refType}.fromEncodingData" )
+#if ( $prop.arrayType && !$isPrimative )
+)##
 #end
-#if ($prop.required)
-$assignment($value ?? {})##
-#else
-typeof $value !== 'undefined' ? $assignment($value) : undefined##
-#end
+#if ( $needsUndefinedCheck )
+: undefined##
 #end
 #end
 #macro ( questionMarkIfOptional $param )
