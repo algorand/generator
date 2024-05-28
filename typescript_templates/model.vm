@@ -86,11 +86,11 @@ new ByteArraySchema()##
 new StringSchema()##
 #elseif ( "#isClassType($param)" == "true" )
 #if ( $param.arrayType )
-#set( $propClassName = $param.arrayType )
+${param.arrayType}##
 #else
-#set( $propClassName = $param.refType )
+${param.refType}##
 #end
-${propClassName}.encodingSchema##
+.encodingSchema##
 #else
 UNHANDLED SCHEMA TYPE
 - property: $param
