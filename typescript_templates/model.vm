@@ -64,7 +64,7 @@ $unknown.type ## force a template failure with an unknown type
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array postfix to arrays...
 #end
 ## Gets the Schema object for a given type.
-#macro ( toSchema $className $param )
+#macro ( toSchema $param )
 #if ( $param.arrayType )
 new ArraySchema(##
 #end
@@ -93,7 +93,6 @@ new StringSchema()##
 ${propClassName}.encodingSchema##
 #else
 UNHANDLED SCHEMA TYPE
-- className: $className
 - property: $param
 - isClassType: #isClassType($param)
 $unknown.type ## force a template failure with an unknown type
@@ -228,7 +227,7 @@ ${value}.toEncodingData()##
 #end
 #end
 ## Create an expression to assign a field in the fromEncodingData function
-#macro ( fromEncodingDataAssignType $value $prop $className )
+#macro ( fromEncodingDataAssignType $value $prop )
 #set( $isPrimative = "#isPrimativeType($prop)" == "true" || $prop.algorandFormat == "Address" )## Addresses are encoded as strings, so treat them as primatives here
 #set( $needsUndefinedCheck = !$isPrimative && !$prop.required )
 #if ( $needsUndefinedCheck )
@@ -321,7 +320,7 @@ export class $def.name implements Encodable {
 ## we allow circular references to be handled properly.
       (this.encodingSchemaValue as NamedMapSchema).entries.push(
 #foreach( $prop in $props )
-        { key: '$prop.propertyName', valueSchema: #toSchema($def.name, $prop), required: $prop.required, omitEmpty: true },
+        { key: '$prop.propertyName', valueSchema: #toSchema($prop), required: $prop.required, omitEmpty: true },
 #end
       );
     }
@@ -392,13 +391,13 @@ export class $def.name implements Encodable {
 #if ($use_object_params)
     return new ${def.name}({
 #foreach( $prop in $props )
-      #paramName($prop): #fromEncodingDataAssignType("data.get('$prop.propertyName')", $prop, $def.name),
+      #paramName($prop): #fromEncodingDataAssignType("data.get('$prop.propertyName')", $prop),
 #end
     });
 #else
     return new ${def.name}(
 #foreach( $prop in $props )
-      #fromEncodingDataAssignType("data.get('$prop.propertyName')", $prop, $def.name),
+      #fromEncodingDataAssignType("data.get('$prop.propertyName')", $prop),
 #end
     );
 #end
