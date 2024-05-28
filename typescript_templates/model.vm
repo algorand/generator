@@ -63,7 +63,7 @@ $unknown.type ## force a template failure with an unknown type
 #end
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array postfix to arrays...
 #end
-## Converts a parameter type into the SDK specific type.
+## Gets the Schema object for a given type.
 #macro ( toSchema $className $param )
 #if ( $param.arrayType )
 new ArraySchema(##
@@ -317,6 +317,8 @@ export class $def.name implements Encodable {
   static get encodingSchema(): Schema {
     if (!this.encodingSchemaValue) {
       this.encodingSchemaValue = new NamedMapSchema([]);
+## By assigning a value to this.encodingSchemaValue before getting the .encodingSchema fields of other types,
+## we allow circular references to be handled properly.
       (this.encodingSchemaValue as NamedMapSchema).entries.push(
 #foreach( $prop in $props )
         { key: '$prop.propertyName', valueSchema: #toSchema($def.name, $prop), required: $prop.required, omitEmpty: true },
