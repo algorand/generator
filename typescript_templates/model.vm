@@ -65,6 +65,9 @@ $unknown.type ## force a template failure with an unknown type
 #end
 ## Gets the Schema object for a given type.
 #macro ( toSchema $param )
+#if ( !$param.required )
+new OptionalSchema(##
+#end
 #if ( $param.arrayType )
 new ArraySchema(##
 #end
@@ -98,6 +101,9 @@ UNHANDLED SCHEMA TYPE
 $unknown.type ## force a template failure with an unknown type
 #end
 #if ( $param.arrayType )
+)##
+#end
+#if ( !$param.required )
 )##
 #end
 #end
@@ -283,7 +289,7 @@ ${prop.refType}##
 /* eslint-disable no-use-before-define */
 import { ensureBigInt, ensureSafeInteger } from '../../../../utils/utils.js';
 import { Encodable, Schema } from '../../../../encoding/encoding.js';
-import { NamedMapSchema, ArraySchema, Uint64Schema, StringSchema, BooleanSchema, ByteArraySchema } from '../../../../encoding/schema/index.js';
+import { NamedMapSchema, ArraySchema, Uint64Schema, StringSchema, BooleanSchema, ByteArraySchema, OptionalSchema } from '../../../../encoding/schema/index.js';
 import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
 import BlockHeader, { blockHeaderFromEncodingData, blockHeaderToEncodingData, BLOCK_HEADER_SCHEMA } from '../../../../types/blockHeader.js';
@@ -320,7 +326,7 @@ export class $def.name implements Encodable {
 ## we allow circular references to be handled properly.
       (this.encodingSchemaValue as NamedMapSchema).entries.push(
 #foreach( $prop in $props )
-        { key: '$prop.propertyName', valueSchema: #toSchema($prop), required: $prop.required, omitEmpty: true },
+        { key: '$prop.propertyName', valueSchema: #toSchema($prop), omitEmpty: true },
 #end
       );
     }
