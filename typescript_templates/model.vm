@@ -17,7 +17,7 @@ SignedTransaction##
 Address##
 #end
 #elseif ( $param.algorandFormat == "BlockHeader" )
-BlockHeader##
+Block##
 #elseif ( $type_override == "bigint" || ( $param.algorandFormat == "uint64" && $type_override.length() == 0 ) )
 #if ( $isArgType )
 (number | bigint)##
@@ -72,7 +72,7 @@ new OptionalSchema(##
 new ArraySchema(##
 #end
 #if ( $param.algorandFormat == "BlockHeader" )
-BLOCK_HEADER_SCHEMA##
+Block.encodingSchema##
 #elseif ( $param.algorandFormat == "SignedTransaction" )
 SignedTransaction.encodingSchema##
 #elseif ( $param.type == "object" || $param.arrayType == "object" )
@@ -216,9 +216,7 @@ typeof ${value} !== "undefined" ? ##
 ${value}.map(v => ##
 #set ( $value = "v" )
 #end
-#if ( $prop.algorandFormat == "BlockHeader" )
-blockHeaderToEncodingData($value)##
-#elseif ( $prop.algorandFormat == "Address" )
+#if ( $prop.algorandFormat == "Address" )
 ${value}.toString()##
 #elseif ( $isPrimative )
 $value##
@@ -250,13 +248,13 @@ $value##
 #elseif ( $prop.required && !$isPrimative )
 #set ( $value = "($value ?? new Map())" )##
 #end
-#if ( $prop.algorandFormat == "BlockHeader" )
-blockHeaderFromEncodingData($value)##
-#elseif ( $isPrimative )
+#if ( $isPrimative )
 ${value}##
 #else
 #if ( $prop.algorandFormat == "SignedTransaction" )
 SignedTransaction##
+#elseif ( $prop.algorandFormat == "BlockHeader" )
+Block##
 #elseif ( $prop.type == "object" )
 UntypedValue##
 #elseif ( $prop.arrayType )
@@ -292,7 +290,7 @@ import { Encodable, Schema } from '../../../../encoding/encoding.js';
 import { NamedMapSchema, ArraySchema, Uint64Schema, StringSchema, BooleanSchema, ByteArraySchema, OptionalSchema } from '../../../../encoding/schema/index.js';
 import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
-import BlockHeader, { blockHeaderFromEncodingData, blockHeaderToEncodingData, BLOCK_HEADER_SCHEMA } from '../../../../types/blockHeader.js';
+import { Block } from '../../../../types/block.js';
 import { SignedTransaction } from '../../../../signedTransaction.js';
 #end
 import { Address } from '../../../../encoding/address.js';
@@ -324,7 +322,7 @@ export class $def.name implements Encodable {
       this.encodingSchemaValue = new NamedMapSchema([]);
 ## By assigning a value to this.encodingSchemaValue before getting the .encodingSchema fields of other types,
 ## we allow circular references to be handled properly.
-      (this.encodingSchemaValue as NamedMapSchema).entries.push(
+      (this.encodingSchemaValue as NamedMapSchema).pushEntries(
 #foreach( $prop in $props )
         { key: '$prop.propertyName', valueSchema: #toSchema($prop), omitEmpty: true },
 #end
