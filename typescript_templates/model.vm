@@ -1,12 +1,14 @@
+## Create a variable in order to insert a $ into the code
+#set( $dollar = "$" )
+## Create a variable in order to insert a ! into the code
+#set( $exclamation = "!" )
 ## Map generated name from spec to hand written name
 #macro ( paramName $param )
 $str.kebabToCamel($param.propertyName.replaceAll("_", "-"))##
 #end
 ## Converts a parameter type into the SDK specific type.
 #macro ( toSdkType $className $param $isArgType )
-#set( $d = "$" )
-#set( $e = "!" )
-#set( $type_override_variable = "${d}${e}propFile.type_override_${className}_#paramName(${param})" )
+#set( $type_override_variable = "${dollar}${exclamation}propFile.type_override_${className}_#paramName(${param})" )
 #set( $type_override = "#evaluate($type_override_variable)" )
 #if ( $param.algorandFormat == "SignedTransaction" )
 SignedTransaction##
@@ -40,7 +42,7 @@ string##
 Uint8Array##
 #elseif($param.arrayType && $param.format == "byte")
 Uint8Array##
-#elseif( $param.type == "string" && $param.format == "byte" )
+#elseif( ($param.type == "string" && $param.format == "byte") || $type_override == "binary" )
 #if ( $isArgType )
 string | Uint8Array##
 #else
@@ -64,7 +66,9 @@ $unknown.type ## force a template failure with an unknown type
 #if ($param.arrayType && $param.arrayType != "")[]#end## Add array postfix to arrays...
 #end
 ## Gets the Schema object for a given type.
-#macro ( toSchema $param )
+#macro ( toSchema $className $param )
+#set( $type_override_variable = "${dollar}${exclamation}propFile.type_override_${className}_#paramName(${param})" )
+#set( $type_override = "#evaluate($type_override_variable)" )
 #if ( !$param.required )
 new OptionalSchema(##
 #end
@@ -83,7 +87,7 @@ new StringSchema()## # To comply with existing msgpack REST API behavior, encode
 new Uint64Schema()##
 #elseif ( $param.type == "boolean" || $param.arrayType == "boolean" )
 new BooleanSchema()##
-#elseif( ( $param.type == "string" || $param.arrayType == "string" ) && ( $param.format == "byte" || $param.format == "binary" ) )
+#elseif( (( $param.type == "string" || $param.arrayType == "string" ) && ( $param.format == "byte" || $param.format == "binary" )) || $type_override == "binary" )
 new ByteArraySchema()##
 #elseif( $param.type == "string" || $param.arrayType == "string" )
 new StringSchema()##
@@ -299,9 +303,7 @@ import { UntypedValue } from '../../untypedmodel.js';
 #foreach( $modelEntry in $models.entrySet() )
 #set( $def = $modelEntry.key )
 #set( $props = $def.propertiesSortedByRequired )
-#set( $d = "$" )
-#set( $e = "!" )
-#set( $override_variable_name = "${d}${e}propFile.override_${def.name}_order" )
+#set( $override_variable_name = "${dollar}${exclamation}propFile.override_${def.name}_order" )
 #set( $preferred_order_str = "#evaluate($override_variable_name)" )
 #if ( $preferred_order_str.length() > 0 )
 #set( $preferred_order = $preferred_order_str.split(",") )
@@ -324,7 +326,7 @@ export class $def.name implements Encodable {
 ## we allow circular references to be handled properly.
       (this.encodingSchemaValue as NamedMapSchema).pushEntries(
 #foreach( $prop in $props )
-        { key: '$prop.propertyName', valueSchema: #toSchema($prop), omitEmpty: true },
+        { key: '$prop.propertyName', valueSchema: #toSchema($def.name, $prop), omitEmpty: true },
 #end
       );
     }
@@ -388,9 +390,8 @@ export class $def.name implements Encodable {
   }
 
   static fromEncodingData(data: unknown): $def.name {
-#set ( $d = "$" )## Create a variable in order to insert a $ into the code
     if (!(data instanceof Map)) {
-      throw new Error(`Invalid decoded logic sig account: ${d}{data}`);
+      throw new Error(`Invalid decoded ${def.name}: ${dollar}{data}`);
     }
 #if ($use_object_params)
     return new ${def.name}({
