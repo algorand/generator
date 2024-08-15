@@ -20,6 +20,8 @@ Address##
 #end
 #elseif ( $param.algorandFormat == "BlockHeader" )
 Block##
+#elseif ( $param.algorandFormat == "StateDelta" )
+LedgerStateDelta##
 #elseif ( $type_override == "bigint" || ( $param.algorandFormat == "uint64" && $type_override.length() == 0 ) )
 #if ( $isArgType )
 (number | bigint)##
@@ -77,6 +79,8 @@ new ArraySchema(##
 #end
 #if ( $param.algorandFormat == "BlockHeader" )
 Block.encodingSchema##
+#elseif ( $param.algorandFormat == "StateDelta" )
+LedgerStateDelta.encodingSchema##
 #elseif ( $param.algorandFormat == "SignedTransaction" )
 SignedTransaction.encodingSchema##
 #elseif ( $param.type == "object" || $param.arrayType == "object" )
@@ -118,6 +122,8 @@ false##
 #elseif ( $param.algorandFormat == "Address" )
 false##
 #elseif ( $param.algorandFormat == "BlockHeader" )
+false##
+#elseif ( $param.algorandFormat == "StateDelta" )
 false##
 #elseif ( $param.algorandFormat == "uint64" )
 false##
@@ -259,6 +265,8 @@ ${value}##
 SignedTransaction##
 #elseif ( $prop.algorandFormat == "BlockHeader" )
 Block##
+#elseif ( $prop.algorandFormat == "StateDelta" )
+LedgerStateDelta##
 #elseif ( $prop.type == "object" )
 UntypedValue##
 #elseif ( $prop.arrayType )
@@ -295,6 +303,7 @@ import { NamedMapSchema, ArraySchema, Uint64Schema, StringSchema, BooleanSchema,
 import { base64ToBytes } from '../../../../encoding/binarydata.js';
 #if ( $propFile.indexer == "false" )
 import { Block } from '../../../../types/block.js';
+import { LedgerStateDelta } from '../../../../types/statedelta.js';
 import { SignedTransaction } from '../../../../signedTransaction.js';
 #end
 import { Address } from '../../../../encoding/address.js';
