@@ -108,4 +108,5 @@ gh pr create \
   --repo $GH_REPO \
   $BASE_ARG_PAIR \
   --title "Regenerate code with the latest specification file ($PR_ID)" \
+  --head $(git branch --show-current) \
   --body "$PR_BODY"
