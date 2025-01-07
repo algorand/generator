@@ -40,7 +40,7 @@ function generate_js {
     -s "$ALGOD_SPEC" \
     -t "$TEMPLATE_DIR" \
     -m "$JS_SDK_DIR/src/client/v2/algod/models" \
-    -p "$TEMPLATE_DIR/algod_config.properties,$TEMPLATE_DIR/parameter_order_overrides.properties"
+    -p "$TEMPLATE_DIR/algod_config.properties"
 
   # Generate indexer.
   $TEMPLATE \
@@ -60,7 +60,7 @@ function generate_go {
   TEMPLATE_DIR=$GENERATOR_DIR/go_templates
   export GH_REPO=$GO_SDK_REPO
   git clone https://github.com/algorand/go-algorand-sdk $GO_SDK_DIR
-  
+
   # Clean previously (stale) generated files before regenerating them.
   # Some files are hand-written instead of generated, so preserve those files here.
   find $GO_SDK_DIR/client/v2/common/models/* $GO_SDK_DIR/client/v2/algod/* $GO_SDK_DIR/client/v2/indexer/* \
@@ -100,7 +100,7 @@ function generate_java {
 
   # Clean previously (stale) generated files before regenerating them.
   # Hand-written files are confined to algosdk/v2/client/common,
-  # except AlgodClient, which will be re-generated according to the specs. 
+  # except AlgodClient, which will be re-generated according to the specs.
   # LedgerStateDelta is a second exception to this, should be revisited.
   find $JAVA_SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/model/* \
       $JAVA_SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/algod/* \
@@ -133,7 +133,7 @@ function generate_java {
     -p  "$JAVA_SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/indexer" \
     -pp "com.algorand.algosdk.v2.client.indexer" \
     -t  "X-Indexer-API-Token" \
-    -s  "$INDEXER_SPEC" 
+    -s  "$INDEXER_SPEC"
 
   pushd $JAVA_SDK_DIR
   /publish.sh
@@ -168,4 +168,3 @@ function generate() {
 }
 
 generate $SDK
-
