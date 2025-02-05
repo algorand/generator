@@ -300,6 +300,12 @@ func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (respo
   err = s.c.getMsgpack(ctx, &response, $processedPath, s.p, headers)
   return
 }
+#elseif( $queryType == "GetBlockHeader" )
+func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
+  s.p.Format = "msgpack"
+  err = s.c.getMsgpack(ctx, &response, $processedPath, s.p, headers)
+  return
+}
 #else## finally... machine generate the rest
 func (s *${queryType}) Do(ctx context.Context, headers ...*common.Header) (response $returnType, err error) {
   err = s.c.get(ctx, &response, $processedPath, $queryArg, headers)
