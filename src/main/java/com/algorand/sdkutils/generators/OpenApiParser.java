@@ -215,7 +215,6 @@ public class OpenApiParser {
                 break;
             case "BlockCertificate":
             case "BlockHeader":
-            case "BlockHeaderResponse":
                 return new TypeDef("HashMap<String,Object>", openApiType, "", propName, goName, desc, required, refType, openApiType, openApiArrayType, openApiFormat, openApiAlgorandFormat, goName,openApiLongNameAlias);
             }
         }

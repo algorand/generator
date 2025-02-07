@@ -20,8 +20,6 @@ Address##
 #end
 #elseif ( $param.algorandFormat == "BlockHeader" )
 Block##
-#elseif ( $param.algorandFormat == "BlockHeaderResponse" )
-BlockHeader##
 #elseif ( $param.algorandFormat == "StateDelta" )
 LedgerStateDelta##
 #elseif ( $type_override == "bigint" || ( $param.algorandFormat == "uint64" && $type_override.length() == 0 ) )
@@ -81,8 +79,6 @@ new ArraySchema(##
 #end
 #if ( $param.algorandFormat == "BlockHeader" )
 Block.encodingSchema##
-#elseif ( $param.algorandFormat == "BlockHeaderResponse" )
-BlockHeader.encodingSchema##
 #elseif ( $param.algorandFormat == "StateDelta" )
 LedgerStateDelta.encodingSchema##
 #elseif ( $param.algorandFormat == "SignedTransaction" )
@@ -126,8 +122,6 @@ false##
 #elseif ( $param.algorandFormat == "Address" )
 false##
 #elseif ( $param.algorandFormat == "BlockHeader" )
-false##
-#elseif ( $param.algorandFormat == "BlockHeaderResponse" )
 false##
 #elseif ( $param.algorandFormat == "StateDelta" )
 false##
@@ -271,8 +265,6 @@ ${value}##
 SignedTransaction##
 #elseif ( $prop.algorandFormat == "BlockHeader" )
 Block##
-#elseif ( $prop.algorandFormat == "BlockHeaderResponse" )
-BlockHeader##
 #elseif ( $prop.algorandFormat == "StateDelta" )
 LedgerStateDelta##
 #elseif ( $prop.type == "object" )
