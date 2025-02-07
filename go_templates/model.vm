@@ -11,8 +11,6 @@ types.SignedTxn##
 ##string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 types.Block##
-#elseif ( $param.algorandFormat == "BlockHeaderResponse" )
-types.BlockHeader##
 #elseif ( $param.type == "object" )
 *map[string]interface{}##
 #elseif ( $param.type == "integer" || $param.arrayType == "integer" )

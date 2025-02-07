@@ -16,8 +16,6 @@
 #set( $propType = "TEALProgram" )
 #elseif ( $prop.algorandFormat == "BlockHeader" )
 #set( $propType = "Block" )
-#elseif ( $prop.algorandFormat == "BlockHeaderResponse" )
-#set( $propType = "BlockHeader" )
 #elseif ( $prop.type == "integer" )
 #set( $propType = "ulong" )
 #elseif( $prop.type == "binary" )
@@ -54,8 +52,6 @@
 string##
 #elseif ( $param.algorandFormat == "BlockHeader" )
 types.Block
-#elseif ( $param.algorandFormat == "BlockHeaderResponse" )
-types.BlockHeader
 #elseif( $setter && ($param.algorandFormat == "base64" || $param.type == "binary" || $param.format == "binary" ) )
 []byte##
 #elseif( $param.type == "binary" )
