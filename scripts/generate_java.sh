@@ -81,12 +81,15 @@ fi
 
 # Clean previously (stale) generated files before regenerating them.
 # Hand-written files are confined to algosdk/v2/client/common,
-# except AlgodClient, which will be re-generated according to the specs. 
+# except AlgodClient, which will be re-generated according to the specs.
 # LedgerStateDelta is a second exception to this, should be revisited.
+# Enums.java is preserved so the second run (indexer) can merge its enums
+# with those from the first run (algod).
 find $SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/model/* \
      $SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/algod/* \
      $SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/indexer/* \
      \! -name 'LedgerStateDelta.java' \
+     \! -name 'Enums.java' \
      -delete
 
 java -jar target/generator-*-jar-with-dependencies.jar \
@@ -102,8 +105,8 @@ java -jar target/generator-*-jar-with-dependencies.jar \
        -tr \
        -s  "$ALGOD_SPEC"
 
-# There is one enum only defined by indexer. Run this second to avoid
-# overwriting the second one.
+# Enums.java from the algod run is preserved on disk; the indexer run
+# reads it back and merges its own enum values before writing the final file.
 java -jar target/generator-*-jar-with-dependencies.jar \
        java \
        -c  "$SDK_DIR/src/main/java/com/algorand/algosdk/v2/client/common" \

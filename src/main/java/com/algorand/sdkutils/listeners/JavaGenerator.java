@@ -1,16 +1,22 @@
 package com.algorand.sdkutils.listeners;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.algorand.sdkutils.generators.Utils;
 import com.algorand.sdkutils.listeners.Publisher.Events;
@@ -47,6 +53,7 @@ public class JavaGenerator implements Subscriber {
     private Boolean tokenOptional;
 
     private static TreeMap<String, String> enumDefinitions = new TreeMap<String, String>();
+    private static TreeMap<String, List<String>> enumValueLists = new TreeMap<String, List<String>>();
 
     public JavaGenerator(
             String clientName,
@@ -76,6 +83,61 @@ public class JavaGenerator implements Subscriber {
 
         generatedPathsEntries = new StringBuilder();
         generatedPathsImports = new StringBuilder();
+
+        loadExistingEnums(modelPath);
+    }
+
+    /**
+     * Pre-populate enumDefinitions from an existing Enums.java so that
+     * a second generator run (e.g. indexer after algod) merges enum values
+     * instead of overwriting them.
+     */
+    private static void loadExistingEnums(String modelPath) {
+        File enumsFile = new File(modelPath, "Enums.java");
+        if (!enumsFile.exists()) {
+            return;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(enumsFile))) {
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+
+            // Match each enum block: "public enum Name { ... }"
+            Pattern enumPattern = Pattern.compile(
+                "public enum (\\w+)\\s*\\{([^}]*?)@JsonProperty\\(\"\"\\) UNKNOWN",
+                Pattern.DOTALL);
+            // Match individual enum values: @JsonProperty("value") CONSTANT("value")
+            Pattern valuePattern = Pattern.compile(
+                "@JsonProperty\\(\"([^\"]+)\"\\)\\s+\\w+\\(\"[^\"]+\"\\)");
+
+            Matcher enumMatcher = enumPattern.matcher(content);
+            while (enumMatcher.find()) {
+                String enumName = enumMatcher.group(1);
+                String enumBody = enumMatcher.group(2);
+                String qualifiedName = "Enums." + enumName;
+
+                if (enumDefinitions.containsKey(qualifiedName)) {
+                    continue;
+                }
+
+                List<String> values = new ArrayList<>();
+                Matcher valueMatcher = valuePattern.matcher(enumBody);
+                while (valueMatcher.find()) {
+                    values.add(valueMatcher.group(1));
+                }
+
+                if (!values.isEmpty()) {
+                    String definition = buildEnumDefinition(enumName, null, values);
+                    enumDefinitions.put(qualifiedName, definition);
+                    enumValueLists.put(qualifiedName, values);
+                }
+            }
+        } catch (IOException e) {
+            // If we can't read the file, just proceed without pre-populated enums
+        }
     }
 
     @Override
@@ -364,17 +426,14 @@ public class JavaGenerator implements Subscriber {
 
     }
 
-    public void storeEnumDefinition(TypeDef typeObj) {
+    private static String buildEnumDefinition(String javaTypeName, String doc, List<String> values) {
         StringBuilder sb = new StringBuilder();
-        String javaTypeName = Tools.getCamelCase(typeObj.propertyName, true);
-        if (typeObj.doc != null && !typeObj.doc.isEmpty()) {
-            sb.append(Tools.formatComment(typeObj.doc, TAB, true));
+        if (doc != null && !doc.isEmpty()) {
+            sb.append(Tools.formatComment(doc, TAB, true));
         }
         sb.append(TAB + "public enum " + javaTypeName + " {\n");
 
-        Iterator<String> elmts = typeObj.enumValues.iterator();
-        while(elmts.hasNext()) {
-            String val = elmts.next();
+        for (String val : values) {
             sb.append(TAB + TAB + "@JsonProperty(\"" + val + "\") ");
             String javaEnum = Tools.getCamelCase(val, true).toUpperCase();
             sb.append(javaEnum);
@@ -404,31 +463,27 @@ public class JavaGenerator implements Subscriber {
         sb.append(TAB + TAB + "}\n\n");
 
         sb.append(TAB + "}\n");
-        javaTypeName = "Enums." + javaTypeName;
+        return sb.toString();
+    }
 
-        // Check for conflicting duplicate classes
-        String definition = sb.toString();
-        String existingDef = enumDefinitions.get(javaTypeName);
-        if (existingDef != null && existingDef.compareTo(definition) != 0) {
-            // Could be the comment missing in one
-            int ei = existingDef.indexOf("*/\n");
-            if (ei == -1) ei = 0; else ei += 3;
-            String existingBody = existingDef.substring(ei);
-            int di = definition.indexOf("*/\n");
-            if (di == -1) di = 0; else di += 3;
-            String definitionBody = definition.substring(di);
-            if (existingBody.equals(definitionBody)) {
-                if (definition.length() < existingDef.length()) {
-                    return;
-                }
-            } else {
-                System.err.println(definition);
-                System.err.println(existingDef);
-                throw new RuntimeException("Conflicting enum classes.");
+    public void storeEnumDefinition(TypeDef typeObj) {
+        String javaTypeName = Tools.getCamelCase(typeObj.propertyName, true);
+        String qualifiedName = "Enums." + javaTypeName;
 
-            }
+        List<String> existingValues = enumValueLists.get(qualifiedName);
+        if (existingValues != null) {
+            // Merge: take union of existing and new values, preserving order
+            LinkedHashSet<String> merged = new LinkedHashSet<>(existingValues);
+            merged.addAll(typeObj.enumValues);
+            List<String> mergedList = new ArrayList<>(merged);
+            String definition = buildEnumDefinition(javaTypeName, typeObj.doc, mergedList);
+            enumDefinitions.put(qualifiedName, definition);
+            enumValueLists.put(qualifiedName, mergedList);
+        } else {
+            String definition = buildEnumDefinition(javaTypeName, typeObj.doc, typeObj.enumValues);
+            enumDefinitions.put(qualifiedName, definition);
+            enumValueLists.put(qualifiedName, new ArrayList<>(typeObj.enumValues));
         }
-        JavaGenerator.enumDefinitions.put(javaTypeName, sb.toString());
     }
 }
 
