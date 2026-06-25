@@ -68,6 +68,7 @@ function generate_go {
     \! -name 'blockRaw.go' \
     \! -name 'dryrun.go' \
     \! -name 'shim.go' \
+    \! -name '*_test.go' \
     -delete
 
   # Generate algod.

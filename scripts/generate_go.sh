@@ -14,10 +14,10 @@ function help() {
   exit
 }
 
-ALGOD_SPEC=/home/will/go/src/github.com/algorand/go-algorand/daemon/algod/api/algod.oas2.json
-INDEXER_SPEC=/home/will/algorand/indexer/api/indexer.oas2.json
-SDK_DIR=/home/will/go/src/github.com/algorand/go-algorand-sdk
-TEMPLATE_DIR=/home/will/algorand/generator/go_templates
+ALGOD_SPEC="$HOME/src/go-algorand/daemon/algod/api/algod.oas2.json"
+INDEXER_SPEC="$HOME/src/indexer/api/indexer.oas2.json"
+SDK_DIR="$HOME/src/go-algorand-sdk"
+TEMPLATE_DIR="$HOME/src/generator/go_templates"
 
 PARAMS=""
 
@@ -70,6 +70,7 @@ find $SDK_DIR/client/v2/common/models/* $SDK_DIR/client/v2/algod/* $SDK_DIR/clie
   \! -name 'blockRaw.go' \
   \! -name 'dryrun.go' \
   \! -name 'shim.go' \
+  \! -name '*_test.go' \
   -delete
 
 # Generate algod.
